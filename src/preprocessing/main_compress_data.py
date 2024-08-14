@@ -13,6 +13,12 @@ from src.paths import local_data_dir
 def compress_single_array(filename: Path) -> None:
     """Write out a compressed version of a single array
     """
+    filename_compressed = filename.with_suffix(".npz")
+
+    if filename_compressed.exists():
+        print(f'Skipping {filename} as {filename_compressed} already exists')
+        return
+
     data = np.load(filename)
     phi = data[..., 4]
 
@@ -22,7 +28,6 @@ def compress_single_array(filename: Path) -> None:
     #assert np.all((phi >= 0.) & (phi <= 1.)), f'phi values outside [0,1] range in {filename}: {phi.min()}, {phi.max()}'
     assert phi.dtype == np.float16
 
-    filename_compressed = filename.with_suffix(".npz")
     np.savez_compressed(filename_compressed, phi=phi)
 
     print(f'Compressed {filename} to {filename_compressed}')
@@ -31,6 +36,8 @@ def compress_single_array(filename: Path) -> None:
 def main():
     data_dir = local_data_dir()
     filenames = list(data_dir.glob("*.npy"))
+
+    print(f'Found {len(filenames)} files to compress')
 
     for filename in filenames:
         compress_single_array(filename)
