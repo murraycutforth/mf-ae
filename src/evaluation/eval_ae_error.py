@@ -1,7 +1,10 @@
+import json
+
 import torch
 import numpy as np
 from tqdm import tqdm
 from skimage.metrics import structural_similarity as ssim
+import pandas as pd
 
 
 def l1_error(gt_patch, pred_patch):
@@ -20,7 +23,7 @@ def ssim_error(gt_patch, pred_patch):
     return ssim(gt_patch, pred_patch, data_range=gt_patch.max() - gt_patch.min())
 
 
-def evaluate_autoencoder(model, dataloader) -> list[dict]:
+def evaluate_autoencoder(model, dataloader, outdir) -> None:
     """Evaluate an autoencoder model on a dataset
 
     Assumes:
@@ -51,4 +54,6 @@ def evaluate_autoencoder(model, dataloader) -> list[dict]:
                 'SSIM': ssim_score
             })
 
-    return metrics
+    df = pd.DataFrame(metrics)
+    df.to_csv(outdir / 'metrics.csv')
+

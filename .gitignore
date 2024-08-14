@@ -2,3 +2,5 @@ output
 data
 .DS_store
 .idea
+__pycache__
+*.pyc

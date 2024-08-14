@@ -29,6 +29,7 @@ class MyAETrainer():
             model: nn.Module,
             dataset: Dataset,
             dataset_val: Dataset,
+            loss: nn.Module = nn.MSELoss(),
             train_batch_size = 32,
             train_lr = 1e-4,
             train_num_epochs = 100,
@@ -52,6 +53,8 @@ class MyAETrainer():
         self.batch_size = train_batch_size
         self.train_num_epochs = train_num_epochs
         self.epoch = 0
+        self.dataset_val = dataset_val
+        self.loss = loss
 
         # dataset and dataloader
         dl = DataLoader(dataset, batch_size=train_batch_size, shuffle=True, pin_memory=True, num_workers=0)
@@ -94,7 +97,7 @@ class MyAETrainer():
 
         data = torch.load(str(self.results_folder / f'model-{milestone}.pt'), map_location=device)
 
-        model = self.accelerator.unwrap_model(self.diffusion_model)
+        model = self.accelerator.unwrap_model(self.model)
         model.load_state_dict(data['model'])
 
         self.step = data['step']
@@ -117,7 +120,8 @@ class MyAETrainer():
                     data = data.to(device)
 
                     with self.accelerator.autocast():
-                        loss = self.model(data)
+                        pred = self.model(data)
+                        loss = self.loss(pred, data)
                         loss_history.append(float(loss.item()))
 
                     self.accelerator.backward(loss)

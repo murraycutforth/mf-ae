@@ -51,7 +51,7 @@ class ConvAutoencoderBaseline(nn.Module):
                  flat_bottleneck: bool = True,
                  latent_dim: int = 100,
                  activation: nn.Module = nn.SELU(),
-                 norm: nn.Module = nn.InstanceNorm3d,
+                 norm: typing.Type[nn.Module] = nn.InstanceNorm3d,
                  feat_map_sizes: list|tuple = (32, 64, 128, 256),
                  ):
         super().__init__()
