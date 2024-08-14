@@ -18,7 +18,7 @@ def main():
     logger.info(f'Using data directory: {args.data_dir}')
 
     outdir = project_dir() / 'output' / args.run_name
-    outdir.mkdir(exist_ok=True)
+    outdir.mkdir(exist_ok=True, parents=True)
 
     model = construct_model(args)
     datasets = construct_datasets(args)
