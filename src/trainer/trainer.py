@@ -159,6 +159,15 @@ class MyAETrainer():
             json.dump(loss_history, f)
         logger.info(f'Loss history written to {loss_history_path}')
 
+        # Also write png loss plot
+        fig, ax = plt.subplots(figsize=(3, 3), dpi=200)
+        ax.plot(loss_history)
+        ax.set_yscale('log')
+        ax.set_xlabel('Step')
+        ax.set_ylabel('Loss')
+        fig.savefig(self.results_folder / 'loss_history.png')
+        plt.close(fig)
+
 
 def num_to_groups(num, divisor):
     groups = num // divisor
