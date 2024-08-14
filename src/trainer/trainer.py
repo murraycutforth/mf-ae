@@ -39,6 +39,7 @@ class MyAETrainer():
             amp = False,
             mixed_precision_type = 'fp16',
             cpu_only = False,
+            num_dl_workers = 0,
     ):
         super().__init__()
 
@@ -57,8 +58,8 @@ class MyAETrainer():
         self.loss = loss
 
         # dataset and dataloader
-        dl = DataLoader(dataset, batch_size=train_batch_size, shuffle=True, pin_memory=True, num_workers=0)
-        dl_val = DataLoader(dataset_val, batch_size=1, shuffle=False, pin_memory=True, num_workers=0)
+        dl = DataLoader(dataset, batch_size=train_batch_size, shuffle=True, pin_memory=True, num_workers=num_dl_workers)
+        dl_val = DataLoader(dataset_val, batch_size=1, shuffle=False, pin_memory=True, num_workers=num_dl_workers)
 
         # Check the size of dataset images
         first_batch = next(iter(dl))

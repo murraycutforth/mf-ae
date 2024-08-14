@@ -36,6 +36,7 @@ def main():
         amp=False,
         mixed_precision_type='fp16',
         cpu_only=not torch.cuda.is_available(),
+        num_dl_workers=8,
     )
 
     trainer.train()
