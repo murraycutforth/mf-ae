@@ -15,7 +15,7 @@ from torch.utils.data import DataLoader, Dataset
 from tqdm import tqdm
 
 from src.evaluation.eval_ae_error import evaluate_autoencoder
-
+from src.plotting_utils import write_isosurface_plot_from_arr
 
 logger = logging.getLogger(__name__)
 
@@ -235,4 +235,22 @@ def plot_samples_and_evaluate(model, dl_val, name: str, results_folder: str, n_s
     plt.close(fig)
 
     logger.info(f"Saved samples spatial slice plot to {filename}")
+
+    isosurface_folder = Path(results_folder) / "isosurface_plots"
+    isosurface_folder.mkdir(exist_ok=True)
+
+    # Create isosurface plots for first 10 samples
+    for i in range(min(10, len(all_data_reconstructed))):
+        write_isosurface_plot_from_arr(all_data_reconstructed[i],
+                                       dx=all_data_reconstructed[0].shape[-1],
+                                       outname=Path(results_folder) / f"{name}_{i}_reconstructed.png",
+                                       level=0.5,
+                                       verbose=False)
+
+        write_isosurface_plot_from_arr(all_data[i],
+                                        dx=all_data[0].shape[-1],
+                                        outname=Path(results_folder) / f"{name}_{i}_original.png",
+                                        level=0.5,
+                                        verbose=False)
+
 

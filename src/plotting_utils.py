@@ -97,7 +97,16 @@ def write_isosurface_plot(restart_path: Path, dx: float, outdir: Path, verbose: 
 
     xs = np.load(str(restart_path))
     vol = xs[:, :, :, 4]
-    fig = plt.figure(figsize=(10, 10))
+    outpath = outdir / Path(f"{restart_path.stem}_isosurface.png")
+
+    write_isosurface_plot_from_arr(vol, dx, outpath, 0.5, verbose)
+
+
+def write_isosurface_plot_from_arr(vol: np.ndarray, dx: float, outname: Path, level: float, verbose: bool) -> None:
+    assert len(vol.shape) == 3
+    assert vol.shape[0] == vol.shape[1] == vol.shape[2]
+
+    fig = plt.figure(figsize=(6, 6), dpi=200)
     ax = fig.add_subplot(111, projection="3d")
 
     ax.set_xlim(0, dx)
@@ -106,7 +115,7 @@ def write_isosurface_plot(restart_path: Path, dx: float, outdir: Path, verbose: 
 
     if np.any(vol > 0.8):
         verts, faces, normals, values = skimage.measure.marching_cubes(
-            vol, 0.8, spacing=(1, 1, 1), allow_degenerate=False, method='lewiner'
+            vol, level, spacing=(1, 1, 1), allow_degenerate=False, method='lewiner'
         )
         mesh = Poly3DCollection(verts[faces])
         mesh.set_edgecolor("k")
@@ -117,10 +126,10 @@ def write_isosurface_plot(restart_path: Path, dx: float, outdir: Path, verbose: 
         pass
     plt.tight_layout()
 
-    outpath = outdir / Path(f"{restart_path.stem}_isosurface.png")
     if verbose:
-        print(f"saving {outpath}")
-    plt.savefig(outpath)
+        print(f"saving {outname}")
+    plt.savefig(outname)
+    plt.close(fig)
 
 
 def make_video(directory, tmpdir="~/tmp", dx=256, verbose=False, n_processes: int = 36):
