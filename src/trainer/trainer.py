@@ -113,6 +113,9 @@ class MyAETrainer():
 
         loss_history = []
 
+        # Save untrained metrics
+        plot_samples_and_evaluate(self.model, self.dl_val, '0', str(self.results_folder))
+
         with tqdm(initial = self.epoch, total = self.train_num_epochs, disable=not accelerator.is_main_process) as pbar:
 
             while self.epoch < self.train_num_epochs:
@@ -123,7 +126,8 @@ class MyAETrainer():
                     with self.accelerator.autocast():
                         pred = self.model(data)
                         loss = self.loss(pred, data)
-                        loss_history.append(float(loss.item()))
+
+                    loss_history.append(float(loss.item()))
 
                     self.accelerator.backward(loss)
 
@@ -142,10 +146,10 @@ class MyAETrainer():
 
                     if self.epoch % self.save_and_sample_every == 0:
 
-                        milestone = self.step // self.save_and_sample_every
+                        milestone = self.epoch // self.save_and_sample_every
                         self.save(milestone)
 
-                        plot_samples(self.model, f'{milestone}', self.results_folder)
+                        plot_samples_and_evaluate(self.model, self.dl_val, f'{milestone}', str(self.results_folder))
 
                         self.write_loss_history(loss_history)
 
@@ -166,6 +170,7 @@ class MyAETrainer():
         ax.set_yscale('log')
         ax.set_xlabel('Step')
         ax.set_ylabel('Loss')
+        fig.tight_layout()
         fig.savefig(self.results_folder / 'loss_history.png')
         plt.close(fig)
 
@@ -183,42 +188,44 @@ def exists(x):
     return x is not None
 
 
-def plot_samples(model, dl_val, name: str, results_folder: str, n_samples: int = 96):
+def plot_samples_and_evaluate(model, dl_val, name: str, results_folder: str, n_samples: int = 96):
 
-    all_samples = []
+    all_data_reconstructed = []
     all_data = []
 
-    for _ in range(n_samples):
-        data = next(dl_val)
+    for i, data in enumerate(dl_val):
+
+        if i >= n_samples:
+            break
+
         pred = model(data)
 
-        all_samples.append(pred.cpu().numpy().squeeze())
-        all_data.append(data.cpu().numpy().squeeze())
+        all_data_reconstructed.append(pred.detach().cpu().numpy().squeeze())
+        all_data.append(data.detach().cpu().numpy().squeeze())
 
-    all_samples = np.stack(all_samples, axis=0)
+    all_data_reconstructed = np.stack(all_data_reconstructed, axis=0)
     all_data = np.stack(all_data, axis=0)
 
-    np.savez_compressed(Path(results_folder) / f"{name}_samples.npz", all_samples=all_samples, all_data=all_data)
+    np.savez_compressed(Path(results_folder) / f"{name}_samples.npz", all_samples=all_data_reconstructed, all_data=all_data)
     logger.info(f'Saved samples to {results_folder}/{name}_samples.npz')
 
-    logger.info(f'Sampled sequence shape: {all_samples[0].shape}')
+    logger.info(f'Sampled sequence shape: {all_data_reconstructed[0].shape}')
 
     # Now compute error metrics on all val data and write out
-    results = evaluate_autoencoder(model, dl_val)
-    with open(Path(results_folder) / f"{name}_metrics.json", 'w') as f:
-        json.dump(results, f)
+    evaluate_autoencoder(model, dl_val, Path(results_folder) / f'{name}_metrics.csv', return_metrics=False)
 
-    # Now just visualise slices from the first 9 samples
-
+    # Now just visualise slices from the first 3 samples
     fig, axs = plt.subplots(6, 3, figsize=(16, 12), dpi=200)
     for i, ax in enumerate(axs.flat):
-        if i >= len(all_samples):
+        if i >= 2 * len(all_data_reconstructed):
             break
 
         if i % 2 == 0:
-            im = ax.imshow(all_samples[i // 2][:, :, 16], cmap="gray")
+            ax.set_title('Reconstructed')
+            im = ax.imshow(all_data_reconstructed[i // 2][:, :, 16], cmap="gray")
             fig.colorbar(im, ax=ax)
         else:
+            ax.set_title('Original')
             im = ax.imshow(all_data[i // 2][:, :, 16], cmap="gray")
             fig.colorbar(im, ax=ax)
 

@@ -1,4 +1,5 @@
 import json
+from typing import Optional
 
 import torch
 import numpy as np
@@ -7,23 +8,23 @@ from skimage.metrics import structural_similarity as ssim
 import pandas as pd
 
 
-def l1_error(gt_patch, pred_patch):
+def compute_mae(gt_patch, pred_patch):
     return np.linalg.norm(gt_patch.flatten() - pred_patch.flatten(), ord=1) / gt_patch.size
 
 
-def l2_error(gt_patch, pred_patch):
-    return np.linalg.norm(gt_patch.flatten() - pred_patch.flatten(), ord=2) / gt_patch.size
+def compute_mse(gt_patch, pred_patch):
+    return (np.linalg.norm(gt_patch.flatten() - pred_patch.flatten(), ord=2))**2 / gt_patch.size
 
 
 def linf_error(gt_patch, pred_patch):
-    return np.linalg.norm(gt_patch.flatten() - pred_patch.flatten(), ord=np.inf) / gt_patch.size
+    return np.linalg.norm(gt_patch.flatten() - pred_patch.flatten(), ord=np.inf)
 
 
 def ssim_error(gt_patch, pred_patch):
     return ssim(gt_patch, pred_patch, data_range=gt_patch.max() - gt_patch.min())
 
 
-def evaluate_autoencoder(model, dataloader, outdir) -> None:
+def evaluate_autoencoder(model, dataloader, outname, return_metrics: bool = False) -> Optional[pd.DataFrame]:
     """Evaluate an autoencoder model on a dataset
 
     Assumes:
@@ -42,18 +43,22 @@ def evaluate_autoencoder(model, dataloader, outdir) -> None:
             assert outputs.shape == data.shape
             assert len(outputs.shape) == 3
 
-            l1 = l1_error(data, outputs)
-            l2 = l2_error(data, outputs)
+            mae = compute_mae(data, outputs)
+            mse = compute_mse(data, outputs)
             linf = linf_error(data, outputs)
             ssim_score = ssim_error(data, outputs)
 
             metrics.append({
-                'L1': l1,
-                'L2': l2,
+                'MAE': mae,
+                'MSE': mse,
                 'Linf': linf,
                 'SSIM': ssim_score
             })
 
     df = pd.DataFrame(metrics)
-    df.to_csv(outdir / 'metrics.csv')
+
+    if return_metrics:
+        return df
+    else:
+        df.to_csv(outname)
 
