@@ -24,6 +24,17 @@ def ssim_error(gt_patch, pred_patch):
     return ssim(gt_patch, pred_patch, data_range=gt_patch.max() - gt_patch.min())
 
 
+def dice_coefficient(gt_patch, pred_patch, level: float = 0.5):
+    """Returns the dice coefficient of foreground region, obtained by thresholding the images at level
+    """
+    gt_patch = gt_patch > level
+    pred_patch = pred_patch > level
+    intersection = np.sum(gt_patch * pred_patch)
+    union = np.sum(gt_patch) + np.sum(pred_patch)
+    return 2 * intersection / union
+
+
+
 def evaluate_autoencoder(model, dataloader, outname, return_metrics: bool = False) -> Optional[pd.DataFrame]:
     """Evaluate an autoencoder model on a dataset
 
