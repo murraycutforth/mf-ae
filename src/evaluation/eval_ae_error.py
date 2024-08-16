@@ -48,8 +48,8 @@ def evaluate_autoencoder(model, dataloader, outname, return_metrics: bool = Fals
     model.eval()
     with torch.no_grad():
         for data in tqdm(dataloader, desc='Evaluating'):
-            outputs = model(data).numpy().squeeze()
-            data = data.numpy().squeeze()
+            outputs = model(data).detach().cpu().numpy().squeeze()
+            data = data.detach().cpu().numpy().squeeze()
 
             assert outputs.shape == data.shape
             assert len(outputs.shape) == 3

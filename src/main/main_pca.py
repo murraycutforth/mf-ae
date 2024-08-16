@@ -23,7 +23,7 @@ def main():
     data_dir.mkdir(exist_ok=True, parents=True)
     logger.info(f'Using data directory: {data_dir}')
 
-    for n_components in [1, 2, 3, 4, 5, 10, 20, 50, 100]:
+    for n_components in [1, 2, 3, 4, 5, 10, 20, 50]:
         outdir = data_dir / f'n_components_{n_components}'
         outdir.mkdir(exist_ok=True, parents=True)
         run_pca(n_components, outdir)
@@ -34,7 +34,7 @@ def run_pca(n_components, outdir):
 
     model = IncrementalPCA(n_components=n_components)
     datasets = construct_datasets()
-    batch_size = 100
+    batch_size = 50
     N_train_batches = len(datasets['train']) // batch_size
 
     for i in tqdm(range(N_train_batches)):
