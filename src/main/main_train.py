@@ -67,7 +67,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--data-dir', type=str, default=local_data_dir(), help='Path to data directory')
     parser.add_argument('--run-name', type=str, default='debug', help='Name of the run')
-    parser.add_argument('--batch-size', type=int, default=1, help='Batch size for training')
+    parser.add_argument('--batch-size', type=int, default=2, help='Batch size for training')
     parser.add_argument('--num-epochs', type=int, default=20, help='Number of epochs to train for')
     parser.add_argument('--lr', type=float, default=1e-4, help='Learning rate for training')
     parser.add_argument('--feat-map-sizes', type=int, nargs='+', default=[16, 32, 64], help='Feature map sizes for the model')

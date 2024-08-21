@@ -68,7 +68,6 @@ def evaluate_autoencoder(model, dataloader, outname: Path, return_metrics: bool 
     """Evaluate an autoencoder model on a dataset
 
     Assumes:
-     - dataloader has batch size 1
      - samples are 3D
      - data is single channel
 
@@ -81,31 +80,43 @@ def evaluate_autoencoder(model, dataloader, outname: Path, return_metrics: bool 
             data = data.detach().cpu().numpy().squeeze()
 
             assert outputs.shape == data.shape, f"Output shape {outputs.shape} does not match data shape {data.shape}"
-            assert len(outputs.shape) == 3, f"Output shape {outputs.shape} is not 3D"
 
-            mae = compute_mae(data, outputs)
-            mse = compute_mse(data, outputs)
-            linf = linf_error(data, outputs)
-            ssim_score = ssim_error(data, outputs)
-            dice = dice_coefficient(data, outputs, level=0.5)
-            hausdorff = hausdorff_distance(data, outputs, level=0.5)
+            if len(outputs.shape) == 4:
+                # Iterate over batches as well
+                batch_size = outputs.shape[0]
+                for i in range(batch_size):
+                    compute_metrics_single_array(data[i], metrics, outputs[i])
 
-            metrics.append({
-                'MAE': mae,
-                'MSE': mse,
-                'Linf': linf,
-                'SSIM': ssim_score,
-                'Dice': dice,
-                'Hausdorff': hausdorff,
-            })
+            else:
+                compute_metrics_single_array(data, metrics, outputs)
 
     df = pd.DataFrame(metrics)
 
-    logger.info(f'Computed all metrics for {outname.stem}. Mean values: {df.mean()}')
+    logger.info(f'Computed all metrics for {outname.stem}. Mean values: \n{df.mean()}')
 
     df.to_csv(outname)
 
     if return_metrics:
         return df
+
+
+def compute_metrics_single_array(data, metrics, outputs):
+    assert outputs.shape == data.shape
+    assert len(outputs.shape) == 3
+
+    mae = compute_mae(data, outputs)
+    mse = compute_mse(data, outputs)
+    linf = linf_error(data, outputs)
+    ssim_score = ssim_error(data, outputs)
+    dice = dice_coefficient(data, outputs, level=0.5)
+    hausdorff = hausdorff_distance(data, outputs, level=0.5)
+    metrics.append({
+        'MAE': mae,
+        'MSE': mse,
+        'Linf': linf,
+        'SSIM': ssim_score,
+        'Dice': dice,
+        'Hausdorff': hausdorff,
+    })
 
 

@@ -195,15 +195,16 @@ class MyAETrainer():
         self.mean_train_metric_history.append((self.epoch, df_train.mean()))
 
     def plot_metric_history(self):
-        df_val = pd.DataFrame(self.mean_val_metric_history)
-        df_train = pd.DataFrame(self.mean_train_metric_history)
+        epochs = [x[0] for x in self.mean_val_metric_history]
+        df_val = pd.DataFrame([x[1] for x in self.mean_val_metric_history])
+        df_train = pd.DataFrame([x[1] for x in self.mean_train_metric_history])
 
         fig, axs = plt.subplots(2, 3, figsize=(8, 6), dpi=200)
 
         for i, metric in enumerate(['MAE', 'MSE', 'Linf', 'SSIM', 'Dice', 'Hausdorff']):
             ax = axs.flatten()[i]
-            ax.plot(df_val[metric][0], df_val[metric][1], label='Validation')
-            ax.plot(df_train[metric][0], df_val[metric][1], label='Training')
+            ax.plot(epochs, df_val[metric], label='Validation')
+            ax.plot(epochs, df_train[metric], label='Training')
             ax.set_xlabel('Epoch')
             ax.set_ylabel(metric)
             ax.legend()
