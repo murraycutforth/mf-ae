@@ -52,7 +52,7 @@ def construct_model(args):
         latent_dim=100,
         activation=nn.SELU(),
         norm=nn.InstanceNorm3d,
-        feat_map_sizes=(16, 32, 64)
+        feat_map_sizes=args.feat_map_sizes
     )
 
     return model
@@ -72,6 +72,7 @@ def parse_args():
     parser.add_argument('--batch-size', type=int, default=1, help='Batch size for training')
     parser.add_argument('--num-epochs', type=int, default=2, help='Number of epochs to train for')
     parser.add_argument('--lr', type=float, default=1e-4, help='Learning rate for training')
+    parser.add_argument('--feat-map-sizes', type=int, nargs='+', default=[16, 32, 64], help='Feature map sizes for the model')
     return parser.parse_args()
 
 
