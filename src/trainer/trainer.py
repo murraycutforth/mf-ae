@@ -116,8 +116,6 @@ class MyAETrainer():
         device = accelerator.device
 
         loss_history = []
-        mean_val_metric_history = []
-        mean_train_metric_history = []
 
         # Save untrained metrics
         plot_samples(self.model, self.dl_val, '0', str(self.results_folder))
@@ -157,19 +155,20 @@ class MyAETrainer():
 
                     if self.epoch % self.save_and_sample_every == 0:
 
-                        milestone = self.epoch // self.save_and_sample_every
-                        self.save(milestone)
+                        logger.info(f'Saving model at epoch {self.epoch}')
 
-                        plot_samples(self.model, self.dl_val, f'{milestone}', str(self.results_folder))
+                        self.save(self.epoch)
+                        plot_samples(self.model, self.dl_val, f'{self.epoch}', str(self.results_folder))
                         self.evaluate_metrics()
-
                         self.write_loss_history(loss_history)
 
                 pbar.update(1)
 
         self.write_loss_history(loss_history)
+        self.evaluate_metrics()
         self.plot_metric_history()
         write_val_predictions(self.model, self.dl_val, 'final', str(self.results_folder))
+        plot_val_prediction_slices(self.model, self.dl_val, self.results_folder)
         logger.info('training complete')
 
     def write_loss_history(self, loss_history):
@@ -192,19 +191,19 @@ class MyAETrainer():
         df_val = evaluate_autoencoder(self.model, self.dl_val, Path(self.results_folder) / 'val_metrics.csv', return_metrics=True)
         df_train = evaluate_autoencoder(self.model, self.dl, Path(self.results_folder) / 'train_metrics.csv', return_metrics=True)
 
-        self.mean_val_metric_history.append(df_val.mean())
-        self.mean_train_metric_history.append(df_train.mean())
+        self.mean_val_metric_history.append((self.epoch, df_val.mean()))
+        self.mean_train_metric_history.append((self.epoch, df_train.mean()))
 
     def plot_metric_history(self):
         df_val = pd.DataFrame(self.mean_val_metric_history)
         df_train = pd.DataFrame(self.mean_train_metric_history)
 
-        fig, axs = plt.subplots(2, 2, figsize=(8, 6), dpi=200)
+        fig, axs = plt.subplots(2, 3, figsize=(8, 6), dpi=200)
 
-        for i, metric in enumerate(['MAE', 'MSE', 'SSIM', 'Dice']):
-            ax = axs[i // 2, i % 2]
-            ax.plot(df_val[metric], label='Validation')
-            ax.plot(df_train[metric], label='Training')
+        for i, metric in enumerate(['MAE', 'MSE', 'Linf', 'SSIM', 'Dice', 'Hausdorff']):
+            ax = axs.flatten()[i]
+            ax.plot(df_val[metric][0], df_val[metric][1], label='Validation')
+            ax.plot(df_train[metric][0], df_val[metric][1], label='Training')
             ax.set_xlabel('Epoch')
             ax.set_ylabel(metric)
             ax.legend()
@@ -225,6 +224,38 @@ def num_to_groups(num, divisor):
 
 def exists(x):
     return x is not None
+
+
+def plot_val_prediction_slices(model, dl_val, results_folder: Path):
+    outdir = results_folder / 'final_val_slice_plots'
+    outdir.mkdir(exist_ok=True)
+
+    for i, data in enumerate(dl_val):
+        pred = model(data)
+        pred = pred.detach().cpu().numpy().squeeze()
+        data = data.detach().cpu().numpy().squeeze()
+
+        fig, axs = plt.subplots(2, 3, figsize=(12, 8), dpi=200)
+
+        for j in range(3):
+            ax = axs[0, j]
+            ax.set_title('Reconstructed')
+            image = np.take(pred, indices=pred.shape[j] // 2, axis=j)
+            im = ax.imshow(image, cmap="gray")
+            fig.colorbar(im, ax=ax)
+
+            ax = axs[1, j]
+            ax.set_title('Original')
+            image = np.take(data, indices=data.shape[j] // 2, axis=j)
+            im = ax.imshow(image, cmap="gray")
+            fig.colorbar(im, ax=ax)
+
+        fig.tight_layout()
+        filename = outdir / f"{i}.png"
+        fig.savefig(filename)
+        plt.close(fig)
+
+        logger.info(f"Saved val spatial slice plot to {filename}")
 
 
 def write_val_predictions(model, dl_val, name: str, results_folder: str):
@@ -294,8 +325,11 @@ def plot_samples(model, dl_val, name: str, results_folder: str, n_samples: int =
                     im = ax.imshow(all_data[i][:, 80, :], cmap="gray")
                     fig.colorbar(im, ax=ax)
 
+    outdir = Path(results_folder) / 'slice_plots'
+    outdir.mkdir(exist_ok=True)
+
     fig.tight_layout()
-    filename = Path(results_folder) / f"{name}_samples_spatial_slice.png"
+    filename = outdir / f"{name}_samples_spatial_slice.png"
     fig.savefig(filename)
     plt.close(fig)
 

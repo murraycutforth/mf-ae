@@ -41,9 +41,6 @@ def main():
 
     trainer.train()
 
-    evaluate_autoencoder(trainer.model, trainer.dataset_val, outdir)
-
-
 
 def construct_model(args):
     model = ConvAutoencoderBaseline(
@@ -52,7 +49,8 @@ def construct_model(args):
         latent_dim=100,
         activation=nn.SELU(),
         norm=nn.InstanceNorm3d,
-        feat_map_sizes=args.feat_map_sizes
+        feat_map_sizes=args.feat_map_sizes,
+        final_activation=args.final_activation
     )
 
     return model
@@ -70,12 +68,16 @@ def parse_args():
     parser.add_argument('--data-dir', type=str, default=local_data_dir(), help='Path to data directory')
     parser.add_argument('--run-name', type=str, default='debug', help='Name of the run')
     parser.add_argument('--batch-size', type=int, default=1, help='Batch size for training')
-    parser.add_argument('--num-epochs', type=int, default=2, help='Number of epochs to train for')
+    parser.add_argument('--num-epochs', type=int, default=20, help='Number of epochs to train for')
     parser.add_argument('--lr', type=float, default=1e-4, help='Learning rate for training')
     parser.add_argument('--feat-map-sizes', type=int, nargs='+', default=[16, 32, 64], help='Feature map sizes for the model')
+    parser.add_argument('--final-activation', type=str, default='sigmoid', help='Final activation function for the model')
     return parser.parse_args()
 
 
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
     main()
+
+
+# TODO - in final evaluation, seems to be an error where evaluation tries to run on a non-cuda data

@@ -63,6 +63,7 @@ class ConvAutoencoderBaseline(nn.Module):
                  activation: nn.Module = nn.SELU(),
                  norm: typing.Type[nn.Module] = nn.InstanceNorm3d,
                  feat_map_sizes: list|tuple = (32, 64, 128, 256),
+                 final_activation: typing.Optional[str] = None,
                  ):
         super().__init__()
         self.flat_bottleneck = flat_bottleneck
@@ -105,6 +106,14 @@ class ConvAutoencoderBaseline(nn.Module):
             )
         else:
             self.decoder = self.decoder_outer
+
+        if final_activation is None:
+            self.decoder.add_module('final_activation', nn.Identity())
+        elif final_activation == 'sigmoid':
+            self.decoder.add_module('final_activation', nn.Sigmoid())
+        else:
+            raise ValueError(f'Unknown final activation: {final_activation}')
+
 
     def forward(self, x):
         z = self.encoder(x)
