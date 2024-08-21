@@ -4,6 +4,7 @@ from pathlib import Path
 import logging
 
 import numpy as np
+import pandas as pd
 import torch
 import torch.nn as nn
 from accelerate import Accelerator
@@ -56,6 +57,9 @@ class MyAETrainer():
         self.epoch = 0
         self.dataset_val = dataset_val
         self.loss = loss
+
+        self.mean_val_metric_history = []
+        self.mean_train_metric_history = []
 
         # dataset and dataloader
         dl = DataLoader(dataset, batch_size=train_batch_size, shuffle=True, pin_memory=True, num_workers=num_dl_workers)
@@ -112,13 +116,18 @@ class MyAETrainer():
         device = accelerator.device
 
         loss_history = []
+        mean_val_metric_history = []
+        mean_train_metric_history = []
 
         # Save untrained metrics
-        plot_samples_and_evaluate(self.model, self.dl_val, '0', str(self.results_folder))
+        plot_samples(self.model, self.dl_val, '0', str(self.results_folder))
+        self.evaluate_metrics()
 
         with tqdm(initial = self.epoch, total = self.train_num_epochs, disable=not accelerator.is_main_process) as pbar:
 
             while self.epoch < self.train_num_epochs:
+
+                epoch_loss = []
 
                 for data in self.dl:
                     data = data.to(device)
@@ -127,7 +136,7 @@ class MyAETrainer():
                         pred = self.model(data)
                         loss = self.loss(pred, data)
 
-                    loss_history.append(float(loss.item()))
+                    epoch_loss.append(float(loss.item()))
 
                     self.accelerator.backward(loss)
 
@@ -141,6 +150,8 @@ class MyAETrainer():
                     accelerator.wait_for_everyone()
 
                 self.epoch += 1
+                epoch_loss = np.mean(epoch_loss)
+                loss_history.append(epoch_loss)
 
                 if accelerator.is_main_process:
 
@@ -149,13 +160,16 @@ class MyAETrainer():
                         milestone = self.epoch // self.save_and_sample_every
                         self.save(milestone)
 
-                        plot_samples_and_evaluate(self.model, self.dl_val, f'{milestone}', str(self.results_folder))
+                        plot_samples(self.model, self.dl_val, f'{milestone}', str(self.results_folder))
+                        self.evaluate_metrics()
 
                         self.write_loss_history(loss_history)
 
                 pbar.update(1)
 
         self.write_loss_history(loss_history)
+        self.plot_metric_history()
+        write_val_predictions(self.model, self.dl_val, 'final', str(self.results_folder))
         logger.info('training complete')
 
     def write_loss_history(self, loss_history):
@@ -168,10 +182,35 @@ class MyAETrainer():
         fig, ax = plt.subplots(figsize=(3, 3), dpi=200)
         ax.plot(loss_history)
         ax.set_yscale('log')
-        ax.set_xlabel('Step')
+        ax.set_xlabel('Epoch')
         ax.set_ylabel('Loss')
         fig.tight_layout()
         fig.savefig(self.results_folder / 'loss_history.png')
+        plt.close(fig)
+
+    def evaluate_metrics(self):
+        df_val = evaluate_autoencoder(self.model, self.dl_val, Path(self.results_folder) / 'val_metrics.csv', return_metrics=True)
+        df_train = evaluate_autoencoder(self.model, self.dl, Path(self.results_folder) / 'train_metrics.csv', return_metrics=True)
+
+        self.mean_val_metric_history.append(df_val.mean())
+        self.mean_train_metric_history.append(df_train.mean())
+
+    def plot_metric_history(self):
+        df_val = pd.DataFrame(self.mean_val_metric_history)
+        df_train = pd.DataFrame(self.mean_train_metric_history)
+
+        fig, axs = plt.subplots(2, 2, figsize=(8, 6), dpi=200)
+
+        for i, metric in enumerate(['MAE', 'MSE', 'SSIM', 'Dice']):
+            ax = axs[i // 2, i % 2]
+            ax.plot(df_val[metric], label='Validation')
+            ax.plot(df_train[metric], label='Training')
+            ax.set_xlabel('Epoch')
+            ax.set_ylabel(metric)
+            ax.legend()
+
+        fig.tight_layout()
+        fig.savefig(self.results_folder / 'metric_history.png')
         plt.close(fig)
 
 
@@ -188,7 +227,24 @@ def exists(x):
     return x is not None
 
 
-def plot_samples_and_evaluate(model, dl_val, name: str, results_folder: str, n_samples: int = 96):
+def write_val_predictions(model, dl_val, name: str, results_folder: str):
+    all_data_reconstructed = []
+    all_data = []
+
+    for i, data in enumerate(dl_val):
+        pred = model(data)
+
+        all_data_reconstructed.append(pred.detach().cpu().numpy().squeeze())
+        all_data.append(data.detach().cpu().numpy().squeeze())
+
+    all_data_reconstructed = np.stack(all_data_reconstructed, axis=0)
+    all_data = np.stack(all_data, axis=0)
+
+    np.savez_compressed(Path(results_folder) / f"{name}_val_predictions.npz", all_samples=all_data_reconstructed, all_data=all_data)
+    logger.info(f'Saved val predictions to {results_folder}/{name}_val_predictions.npz')
+
+
+def plot_samples(model, dl_val, name: str, results_folder: str, n_samples: int = 2):
 
     all_data_reconstructed = []
     all_data = []
@@ -206,28 +262,37 @@ def plot_samples_and_evaluate(model, dl_val, name: str, results_folder: str, n_s
     all_data_reconstructed = np.stack(all_data_reconstructed, axis=0)
     all_data = np.stack(all_data, axis=0)
 
-    np.savez_compressed(Path(results_folder) / f"{name}_samples.npz", all_samples=all_data_reconstructed, all_data=all_data)
-    logger.info(f'Saved samples to {results_folder}/{name}_samples.npz')
-
     logger.info(f'Sampled sequence shape: {all_data_reconstructed[0].shape}')
 
-    # Now compute error metrics on all val data and write out
-    evaluate_autoencoder(model, dl_val, Path(results_folder) / f'{name}_metrics.csv', return_metrics=False)
+    # Now just visualise slices
+    fig, axs = plt.subplots(n_samples, 4, figsize=(16, 3 * n_samples), dpi=200)
 
-    # Now just visualise slices from the first 3 samples
-    fig, axs = plt.subplots(6, 3, figsize=(16, 12), dpi=200)
-    for i, ax in enumerate(axs.flat):
-        if i >= 2 * len(all_data_reconstructed):
-            break
+    for i in range(n_samples):
+        for j in range(4):
 
-        if i % 2 == 0:
-            ax.set_title('Reconstructed')
-            im = ax.imshow(all_data_reconstructed[i // 2][:, :, 16], cmap="gray")
-            fig.colorbar(im, ax=ax)
-        else:
-            ax.set_title('Original')
-            im = ax.imshow(all_data[i // 2][:, :, 16], cmap="gray")
-            fig.colorbar(im, ax=ax)
+                if j == 0:
+                    ax = axs[i, j]
+                    ax.set_title('Reconstructed (z=48)')
+                    im = ax.imshow(all_data_reconstructed[i][:, :, 48], cmap="gray")
+                    fig.colorbar(im, ax=ax)
+
+                elif j == 1:
+                    ax = axs[i, j]
+                    ax.set_title('Reconstructed (y=80)')
+                    im = ax.imshow(all_data_reconstructed[i][:, 80, :], cmap="gray")
+                    fig.colorbar(im, ax=ax)
+
+                elif j == 2:
+                    ax = axs[i, j]
+                    ax.set_title('Original (z=48)')
+                    im = ax.imshow(all_data[i][:, :, 48], cmap="gray")
+                    fig.colorbar(im, ax=ax)
+
+                elif j == 3:
+                    ax = axs[i, j]
+                    ax.set_title('Original (y=80)')
+                    im = ax.imshow(all_data[i][:, 80, :], cmap="gray")
+                    fig.colorbar(im, ax=ax)
 
     fig.tight_layout()
     filename = Path(results_folder) / f"{name}_samples_spatial_slice.png"
@@ -236,11 +301,10 @@ def plot_samples_and_evaluate(model, dl_val, name: str, results_folder: str, n_s
 
     logger.info(f"Saved samples spatial slice plot to {filename}")
 
+    # Create isosurface plots
     isosurface_folder = Path(results_folder) / "isosurface_plots"
     isosurface_folder.mkdir(exist_ok=True)
-
-    # Create isosurface plots for first 10 samples
-    for i in range(min(10, len(all_data_reconstructed))):
+    for i in range(n_samples):
         write_isosurface_plot_from_arr(all_data_reconstructed[i],
                                        dx=all_data_reconstructed[0].shape[-1],
                                        outname=isosurface_folder / f"{name}_{i}_reconstructed.png",

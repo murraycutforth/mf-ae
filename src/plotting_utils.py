@@ -117,6 +117,10 @@ def write_isosurface_plot_from_arr(vol: np.ndarray, dx: float, outname: Path, le
         verts, faces, normals, values = skimage.measure.marching_cubes(
             vol, level, spacing=(1, 1, 1), allow_degenerate=False, method='lewiner'
         )
+
+        while len(faces) > 500_000:
+            faces = faces[::2]
+
         mesh = Poly3DCollection(verts[faces])
         mesh.set_edgecolor("k")
         mesh.set_linewidth(0.05)

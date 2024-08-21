@@ -18,7 +18,7 @@ class TestTrainingProcessNoise(unittest.TestCase):
         self.model = ConvAutoencoderBaseline(
             image_shape=(32, 32, 32),
             flat_bottleneck=False,
-            latent_dim=100,
+            #latent_dim=100,
             activation=nn.ReLU(),
             norm=nn.BatchNorm3d,
             feat_map_sizes=(16, 32, 64)
@@ -65,7 +65,7 @@ class TestTrainingProcessSquares(unittest.TestCase):
         self.model = ConvAutoencoderBaseline(
             image_shape=(32, 32, 32),
             flat_bottleneck=False,
-            latent_dim=100,
+            #latent_dim=100,
             activation=nn.ReLU(),
             norm=nn.BatchNorm3d,
             feat_map_sizes=(16, 32, 64)

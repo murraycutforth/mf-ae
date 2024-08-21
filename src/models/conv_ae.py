@@ -15,30 +15,40 @@ logger = logging.getLogger(__name__)
 
 
 class ConvBlockDown(nn.Module):
-    def __init__(self, in_channels, out_channels, kernel_size, stride, padding, activation, norm):
+    def __init__(self, in_channels, out_channels, kernel_size, padding, activation, norm):
         super().__init__()
-        self.conv = nn.Conv3d(in_channels, out_channels, kernel_size=kernel_size, stride=stride, padding=padding)
-        self.norm = norm(out_channels)
+        self.conv_1 = nn.Conv3d(in_channels, in_channels, kernel_size=kernel_size, stride=2, padding=padding)
+        self.conv_2 = nn.Conv3d(in_channels, out_channels, kernel_size=kernel_size, stride=1, padding=padding)
+        self.norm_1 = norm(in_channels)
+        self.norm_2 = norm(out_channels)
         self.activation = activation
 
     def forward(self, x):
-        x = self.conv(x)
+        x = self.conv_1(x)
         x = self.activation(x)
-        x = self.norm(x)
+        x = self.norm_1(x)
+        x = self.conv_2(x)
+        x = self.activation(x)
+        x = self.norm_2(x)
         return x
 
 
 class ConvBlockUp(nn.Module):
-    def __init__(self, in_channels, out_channels, kernel_size, stride, padding, output_padding, activation, norm):
+    def __init__(self, in_channels, out_channels, kernel_size, padding, output_padding, activation, norm):
         super().__init__()
-        self.conv = nn.ConvTranspose3d(in_channels, out_channels, kernel_size=kernel_size, stride=stride, padding=padding, output_padding=output_padding)
-        self.norm = norm(out_channels)
+        self.conv_1 = nn.ConvTranspose3d(in_channels, out_channels, kernel_size=kernel_size, stride=2, padding=padding, output_padding=output_padding)
+        self.conv_2 = nn.Conv3d(out_channels, out_channels, kernel_size=kernel_size, stride=1, padding=padding)
+        self.norm_1 = norm(out_channels)
+        self.norm_2 = norm(out_channels)
         self.activation = activation
 
     def forward(self, x):
-        x = self.conv(x)
+        x = self.conv_1(x)
         x = self.activation(x)
-        x = self.norm(x)
+        x = self.norm_1(x)
+        x = self.conv_2(x)
+        x = self.activation(x)
+        x = self.norm_2(x)
         return x
 
 
@@ -61,7 +71,7 @@ class ConvAutoencoderBaseline(nn.Module):
         self.norm = norm
 
         self.encoder_outer = nn.Sequential(
-            *[ConvBlockDown(in_channels, out_channels, kernel_size=3, stride=2, padding=1, activation=activation, norm=norm) \
+            *[ConvBlockDown(in_channels, out_channels, kernel_size=3, padding=1, activation=activation, norm=norm) \
               for in_channels, out_channels in zip([1] + list(feat_map_sizes[:-1]), feat_map_sizes)]
         )
 
@@ -80,7 +90,7 @@ class ConvAutoencoderBaseline(nn.Module):
             self.encoder = self.encoder_outer
 
         self.decoder_outer = nn.Sequential(
-            *[ConvBlockUp(in_channels, out_channels, kernel_size=3, stride=2, padding=1, output_padding=1, activation=activation, norm=norm) \
+            *[ConvBlockUp(in_channels, out_channels, kernel_size=3, padding=1, output_padding=1, activation=activation, norm=norm) \
               for in_channels, out_channels in zip(feat_map_sizes[::-1], list(feat_map_sizes[-2::-1]) + [1])]
         )
 

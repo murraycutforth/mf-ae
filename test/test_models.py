@@ -6,7 +6,7 @@ from src.models.conv_ae import ConvBlockDown, ConvBlockUp, ConvAutoencoderBaseli
 
 class TestConvBlockDown(unittest.TestCase):
     def setUp(self):
-        self.block = ConvBlockDown(in_channels=1, out_channels=32, kernel_size=3, stride=2, padding=1, activation=nn.ReLU(), norm=nn.BatchNorm3d)
+        self.block = ConvBlockDown(in_channels=1, out_channels=32, kernel_size=3, padding=1, activation=nn.ReLU(), norm=nn.BatchNorm3d)
         self.input_tensor = torch.randn(1, 1, 64, 64, 64)
 
     def test_construction(self):
@@ -19,7 +19,7 @@ class TestConvBlockDown(unittest.TestCase):
 
 class TestConvBlockUp(unittest.TestCase):
     def setUp(self):
-        self.block = ConvBlockUp(in_channels=32, out_channels=1, kernel_size=3, stride=2, padding=1, output_padding=1, activation=nn.ReLU(), norm=nn.BatchNorm3d)
+        self.block = ConvBlockUp(in_channels=32, out_channels=1, kernel_size=3, padding=1, output_padding=1, activation=nn.ReLU(), norm=nn.BatchNorm3d)
         self.input_tensor = torch.randn(1, 32, 32, 32, 32)
 
     def test_construction(self):
