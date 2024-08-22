@@ -31,7 +31,7 @@ def main():
         train_lr=args.lr,
         train_num_epochs=args.num_epochs,
         adam_betas=(0.9, 0.99),
-        save_and_sample_every=10,
+        save_and_sample_every=args.num_epochs // 5,
         results_folder=outdir,
         amp=False,
         mixed_precision_type='fp16',
