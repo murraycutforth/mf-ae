@@ -63,7 +63,7 @@ class MyAETrainer():
         elif loss == 'l1':
             self.loss = nn.L1Loss()
         else:
-            raise ValueError(f'Loss {loss} not recognised. Please use "mse" or "mae"')
+            raise ValueError(f'Loss {loss} not recognised. Please use "mse" or "l1"')
 
         self.mean_val_metric_history = []
         self.mean_train_metric_history = []
