@@ -31,7 +31,6 @@ class MyAETrainer():
             model: nn.Module,
             dataset: Dataset,
             dataset_val: Dataset,
-            loss: nn.Module = nn.MSELoss(),
             train_batch_size = 32,
             train_lr = 1e-4,
             train_num_epochs = 100,
@@ -42,6 +41,7 @@ class MyAETrainer():
             mixed_precision_type = 'fp16',
             cpu_only = False,
             num_dl_workers = 0,
+            loss: str = 'mse',
     ):
         super().__init__()
 
@@ -57,7 +57,13 @@ class MyAETrainer():
         self.train_num_epochs = train_num_epochs
         self.epoch = 0
         self.dataset_val = dataset_val
-        self.loss = loss
+
+        if loss == 'mse':
+            self.loss = nn.MSELoss()
+        elif loss == 'l1':
+            self.loss = nn.L1Loss()
+        else:
+            raise ValueError(f'Loss {loss} not recognised. Please use "mse" or "mae"')
 
         self.mean_val_metric_history = []
         self.mean_train_metric_history = []

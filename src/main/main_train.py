@@ -37,6 +37,7 @@ def main():
         mixed_precision_type='fp16',
         cpu_only=not torch.cuda.is_available(),
         num_dl_workers=8,
+        loss=args.loss,
     )
 
     trainer.train()
@@ -72,6 +73,7 @@ def parse_args():
     parser.add_argument('--lr', type=float, default=1e-4, help='Learning rate for training')
     parser.add_argument('--feat-map-sizes', type=int, nargs='+', default=[16, 32, 64], help='Feature map sizes for the model')
     parser.add_argument('--final-activation', type=str, default='sigmoid', help='Final activation function for the model')
+    parser.add_argument('--loss', type=str, default='mse', help='Loss function to use')
     return parser.parse_args()
 
 
