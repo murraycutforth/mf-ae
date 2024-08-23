@@ -3,6 +3,7 @@ import math
 from pathlib import Path
 import logging
 
+import accelerate
 import numpy as np
 import pandas as pd
 import torch
@@ -45,7 +46,7 @@ class MyAETrainer():
         super().__init__()
 
         self.accelerator = Accelerator(
-            split_batches=False,
+            dataloader_config=accelerate.DataLoaderConfiguration(split_batches=False),
             mixed_precision=mixed_precision_type if amp else 'no',
             cpu=cpu_only,
         )
@@ -118,8 +119,10 @@ class MyAETrainer():
         loss_history = []
 
         # Save untrained metrics
-        plot_samples(self.model, self.dl_val, '0', str(self.results_folder))
-        self.evaluate_metrics()
+
+        if self.accelerator.is_main_process:
+            plot_samples(self.model, self.dl_val, '0', str(self.results_folder))
+            self.evaluate_metrics()
 
         with tqdm(initial = self.epoch, total = self.train_num_epochs, disable=not accelerator.is_main_process) as pbar:
 
@@ -164,12 +167,14 @@ class MyAETrainer():
 
                 pbar.update(1)
 
-        self.write_loss_history(loss_history)
-        self.evaluate_metrics()
-        self.plot_metric_history()
-        write_val_predictions(self.model, self.dl_val, 'final', str(self.results_folder))
-        plot_val_prediction_slices(self.model, self.dl_val, self.results_folder)
-        logger.info('training complete')
+        if self.accelerator.is_main_process:
+            self.write_loss_history(loss_history)
+            self.evaluate_metrics()
+            self.plot_metric_history()
+            write_val_predictions(self.model, self.dl_val, 'final', str(self.results_folder))
+            plot_val_prediction_slices(self.model, self.dl_val, self.results_folder)
+
+        logger.info(f'[Accelerate device {self.accelerator.device}] Training complete!')
 
     def write_loss_history(self, loss_history):
         loss_history_path = self.results_folder / 'loss_history.json'
@@ -188,8 +193,8 @@ class MyAETrainer():
         plt.close(fig)
 
     def evaluate_metrics(self):
-        df_val = evaluate_autoencoder(self.model, self.dl_val, Path(self.results_folder) / 'val_metrics.csv', return_metrics=True)
-        df_train = evaluate_autoencoder(self.model, self.dl, Path(self.results_folder) / 'train_metrics.csv', return_metrics=True)
+        df_val = evaluate_autoencoder(self.model, self.dl_val, Path(self.results_folder) / 'val_metrics.csv', max_num_batches=len(self.dl_val), return_metrics=True)
+        df_train = evaluate_autoencoder(self.model, self.dl, Path(self.results_folder) / 'train_metrics.csv', max_num_batches=len(self.dl_val), return_metrics=True)
 
         self.mean_val_metric_history.append((self.epoch, df_val.mean()))
         self.mean_train_metric_history.append((self.epoch, df_train.mean()))
@@ -281,20 +286,22 @@ def plot_samples(model, dl_val, name: str, results_folder: str, n_samples: int =
     all_data_reconstructed = []
     all_data = []
 
-    for i, data in enumerate(dl_val):
+    with torch.no_grad():
+        for i, data in enumerate(dl_val):
 
-        if i >= n_samples:
-            break
+            if i >= n_samples:
+                break
 
-        pred = model(data)
+            pred = model(data)
 
-        all_data_reconstructed.append(pred.detach().cpu().numpy().squeeze())
-        all_data.append(data.detach().cpu().numpy().squeeze())
+            all_data_reconstructed.append(pred.detach().cpu().numpy().squeeze())
+            all_data.append(data.detach().cpu().numpy().squeeze())
 
     all_data_reconstructed = np.stack(all_data_reconstructed, axis=0)
     all_data = np.stack(all_data, axis=0)
 
-    logger.info(f'Sampled sequence shape: {all_data_reconstructed[0].shape}')
+    im_shape = all_data_reconstructed[0].shape
+    logger.info(f'Sampled sequence shape: {im_shape}')
 
     # Now just visualise slices
     fig, axs = plt.subplots(n_samples, 4, figsize=(16, 3 * n_samples), dpi=200)
@@ -304,26 +311,26 @@ def plot_samples(model, dl_val, name: str, results_folder: str, n_samples: int =
 
                 if j == 0:
                     ax = axs[i, j]
-                    ax.set_title('Reconstructed (z=48)')
-                    im = ax.imshow(all_data_reconstructed[i][:, :, 48], cmap="gray")
+                    ax.set_title(f'Reconstructed (z={im_shape[2] // 2})')
+                    im = ax.imshow(all_data_reconstructed[i][:, :, im_shape[2] // 2], cmap="gray")
                     fig.colorbar(im, ax=ax)
 
                 elif j == 1:
                     ax = axs[i, j]
-                    ax.set_title('Reconstructed (y=80)')
-                    im = ax.imshow(all_data_reconstructed[i][:, 80, :], cmap="gray")
+                    ax.set_title(f'Reconstructed (y={im_shape[1] // 2})')
+                    im = ax.imshow(all_data_reconstructed[i][:, im_shape[1] // 2, :], cmap="gray")
                     fig.colorbar(im, ax=ax)
 
                 elif j == 2:
                     ax = axs[i, j]
-                    ax.set_title('Original (z=48)')
-                    im = ax.imshow(all_data[i][:, :, 48], cmap="gray")
+                    ax.set_title(f'Original (z={im_shape[2] // 2})')
+                    im = ax.imshow(all_data[i][:, :, im_shape[2] // 2], cmap="gray")
                     fig.colorbar(im, ax=ax)
 
                 elif j == 3:
                     ax = axs[i, j]
-                    ax.set_title('Original (y=80)')
-                    im = ax.imshow(all_data[i][:, 80, :], cmap="gray")
+                    ax.set_title('Original (y={im_shape[1] // 2})')
+                    im = ax.imshow(all_data[i][:, im_shape[1] // 2, :], cmap="gray")
                     fig.colorbar(im, ax=ax)
 
     outdir = Path(results_folder) / 'slice_plots'

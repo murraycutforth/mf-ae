@@ -64,7 +64,7 @@ def hausdorff_distance(gt_patch, pred_patch, level: float = 0.5):
     return max(h_1, h_2)
 
 
-def evaluate_autoencoder(model, dataloader, outname: Path, return_metrics: bool = False) -> Optional[pd.DataFrame]:
+def evaluate_autoencoder(model, dataloader, outname: str, max_num_batches: int, return_metrics: bool = False) -> Optional[pd.DataFrame]:
     """Evaluate an autoencoder model on a dataset
 
     Assumes:
@@ -75,7 +75,7 @@ def evaluate_autoencoder(model, dataloader, outname: Path, return_metrics: bool 
     metrics = []
     model.eval()
     with torch.no_grad():
-        for data in tqdm(dataloader, desc='Running inference and computing metrics'):
+        for i, data in tqdm(enumerate(dataloader), desc='Running inference and computing metrics'):
             outputs = model(data).detach().cpu().numpy().squeeze()
             data = data.detach().cpu().numpy().squeeze()
 
@@ -92,7 +92,7 @@ def evaluate_autoencoder(model, dataloader, outname: Path, return_metrics: bool 
 
     df = pd.DataFrame(metrics)
 
-    logger.info(f'Computed all metrics for {outname.stem}. Mean values: \n{df.mean()}')
+    logger.info(f'Computed all metrics for {outname}. Mean values: \n{df.mean()}')
 
     df.to_csv(outname)
 

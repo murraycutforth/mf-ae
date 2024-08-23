@@ -114,6 +114,9 @@ class ConvAutoencoderBaseline(nn.Module):
         else:
             raise ValueError(f'Unknown final activation: {final_activation}')
 
+        num_params = sum(p.numel() for p in self.parameters())
+        logger.info(f'Constructed ConvAutoencoderBaseline with {num_params} parameters')
+
 
     def forward(self, x):
         z = self.encoder(x)
