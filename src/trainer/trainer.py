@@ -295,13 +295,16 @@ def plot_samples(model, dl_val, name: str, results_folder: str, n_samples: int =
     with torch.no_grad():
         for i, data in enumerate(dl_val):
 
-            if i >= n_samples:
+            if len(all_data_reconstructed) >= n_samples:
                 break
 
             pred = model(data)
 
-            all_data_reconstructed.append(pred.detach().cpu().numpy().squeeze())
-            all_data.append(data.detach().cpu().numpy().squeeze())
+            batch_size = pred.shape[0]
+
+            for j in range(batch_size):
+                all_data_reconstructed.append(pred[j].cpu().numpy().squeeze())
+                all_data.append(data[j].detach().numpy().squeeze())
 
     all_data_reconstructed = np.stack(all_data_reconstructed, axis=0)
     all_data = np.stack(all_data, axis=0)
