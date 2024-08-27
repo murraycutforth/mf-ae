@@ -76,6 +76,10 @@ def evaluate_autoencoder(model, dataloader, outname: str, max_num_batches: int, 
     model.eval()
     with torch.no_grad():
         for i, data in tqdm(enumerate(dataloader), desc='Running inference and computing metrics'):
+
+            if i >= max_num_batches:
+                break
+
             outputs = model(data).detach().cpu().numpy().squeeze()
             data = data.detach().cpu().numpy().squeeze()
 

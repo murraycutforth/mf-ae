@@ -70,7 +70,7 @@ class MyAETrainer():
 
         # dataset and dataloader
         dl = DataLoader(dataset, batch_size=train_batch_size, shuffle=True, pin_memory=True, num_workers=num_dl_workers)
-        dl_val = DataLoader(dataset_val, batch_size=1, shuffle=False, pin_memory=True, num_workers=num_dl_workers)
+        dl_val = DataLoader(dataset_val, batch_size=train_batch_size, shuffle=False, pin_memory=True, num_workers=num_dl_workers)
 
         # Check the size of dataset images
         first_batch = next(iter(dl))
