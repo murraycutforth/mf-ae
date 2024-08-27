@@ -253,13 +253,13 @@ def plot_val_prediction_slices(model, dl_val, results_folder: Path):
             ax = axs[0, j]
             ax.set_title('Reconstructed')
             image = np.take(pred, indices=pred.shape[j] // 2, axis=j)
-            im = ax.imshow(image, cmap="gray")
+            im = ax.imshow(image, cmap="gray", vmin=0, vmax=1)
             fig.colorbar(im, ax=ax)
 
             ax = axs[1, j]
             ax.set_title('Original')
             image = np.take(data, indices=data.shape[j] // 2, axis=j)
-            im = ax.imshow(image, cmap="gray")
+            im = ax.imshow(image, cmap="gray", vmin=0, vmax=1)
             fig.colorbar(im, ax=ax)
 
         fig.tight_layout()
@@ -287,7 +287,7 @@ def write_val_predictions(model, dl_val, name: str, results_folder: str):
     logger.info(f'Saved val predictions to {results_folder}/{name}_val_predictions.npz')
 
 
-def plot_samples(model, dl_val, name: str, results_folder: str, n_samples: int = 2):
+def plot_samples(model, dl_val, name: str, results_folder: str, n_samples: int = 20):
 
     all_data_reconstructed = []
     all_data = []
