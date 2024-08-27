@@ -42,10 +42,13 @@ class TestConvAutoencoderBaselineFlat(unittest.TestCase):
         output = self.model(self.input_tensor)
         self.assertEqual(output.shape, self.input_tensor.shape)
 
+    def test_encoding_shape(self):
+        self.assertEqual(self.model.encoder(self.input_tensor).shape, (1, 100))
+
 
 class TestConvAutoencoderBaseline(unittest.TestCase):
     def setUp(self):
-        self.model = ConvAutoencoderBaseline(image_shape=(64, 64, 64), flat_bottleneck=False, latent_dim=100, activation=nn.ReLU(), norm=nn.BatchNorm3d)
+        self.model = ConvAutoencoderBaseline(image_shape=(64, 64, 64), flat_bottleneck=False, activation=nn.ReLU(), norm=nn.BatchNorm3d)
         self.input_tensor = torch.randn(1, 1, 64, 64, 64)
 
     def test_construction(self):
@@ -54,6 +57,13 @@ class TestConvAutoencoderBaseline(unittest.TestCase):
     def test_forward_pass(self):
         output = self.model(self.input_tensor)
         self.assertEqual(output.shape, self.input_tensor.shape)
+
+    def test_num_up_blocks(self):
+        self.assertEqual(len(self.model.decoder), 4)
+
+    def test_num_down_blocks(self):
+        self.assertEqual(len(self.model.encoder), 4)
+
 
 
 if __name__ == '__main__':
