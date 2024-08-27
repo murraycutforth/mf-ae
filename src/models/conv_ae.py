@@ -92,7 +92,7 @@ class ConvAutoencoderBaseline(nn.Module):
 
         self.decoder_outer = nn.Sequential(
             *[ConvBlockUp(in_channels, out_channels, kernel_size=3, padding=1, output_padding=1, activation=activation, norm=norm) \
-              for in_channels, out_channels in zip(feat_map_sizes[::-1], list(feat_map_sizes[-2::-1]) + [1])]
+              for in_channels, out_channels in zip(feat_map_sizes[::-1], list(feat_map_sizes[-2::-1]) + [feat_map_sizes[0]])]
         )
 
         if flat_bottleneck:
@@ -107,6 +107,9 @@ class ConvAutoencoderBaseline(nn.Module):
         else:
             self.decoder = self.decoder_outer
 
+        # Add final convolution with no activation
+        self.decoder.add_module('final_conv', nn.Conv3d(feat_map_sizes[0], 1, kernel_size=3, padding=1))
+
         if final_activation is None:
             self.decoder.add_module('final_activation', nn.Identity())
         elif final_activation == 'sigmoid':
@@ -116,7 +119,9 @@ class ConvAutoencoderBaseline(nn.Module):
 
         num_params = sum(p.numel() for p in self.parameters())
         logger.info(f'Constructed ConvAutoencoderBaseline with {num_params} parameters')
-
+        logger.info(f'Model architecture: \n{self}')
+        bottleneck_size = latent_dim if flat_bottleneck else np.prod(final_shape) * feat_map_sizes[-1]
+        logger.info(f'Input size: {np.prod(image_shape)}, bottleneck size: {bottleneck_size}, compression ratio: {np.prod(image_shape) / bottleneck_size}')
 
     def forward(self, x):
         z = self.encoder(x)

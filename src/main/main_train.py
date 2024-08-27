@@ -15,10 +15,15 @@ logger = logging.getLogger(__name__)
 
 def main():
     args = parse_args()
-    logger.info(f'Using data directory: {args.data_dir}')
 
     outdir = project_dir() / 'output' / args.run_name
     outdir.mkdir(exist_ok=True, parents=True)
+
+    logging.basicConfig(level=logging.INFO,
+                        format='%(asctime)s - %(name)s - %(levelname)s: %(message)s',
+                        handlers=[logging.StreamHandler(), logging.FileHandler(outdir / 'output.log')])
+
+    logger.info(f'Starting training with args: {args}')
 
     model = construct_model(args)
     datasets = construct_datasets(args)
@@ -48,7 +53,7 @@ def construct_model(args):
         image_shape=(256, 256, 256),
         flat_bottleneck=False,
         latent_dim=100,
-        activation=nn.SELU(),
+        activation=nn.ReLU(),
         norm=nn.InstanceNorm3d,
         feat_map_sizes=args.feat_map_sizes,
         final_activation=args.final_activation
@@ -78,7 +83,6 @@ def parse_args():
 
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.INFO)
     main()
 
 
