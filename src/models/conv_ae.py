@@ -1,15 +1,9 @@
-import argparse
-import json
+
 import logging
 import typing
 
-import torch
 import torch.nn as nn
-import torch.optim as optim
 import numpy as np
-from torch.utils.data import DataLoader
-from tqdm import tqdm
-from skimage.metrics import structural_similarity as ssim
 
 logger = logging.getLogger(__name__)
 
@@ -56,13 +50,18 @@ class FirstConvBlock(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size, padding, activation, norm):
         super().__init__()
         self.conv_1 = nn.Conv3d(in_channels, out_channels, kernel_size=kernel_size, padding=padding)
+        self.conv_2 = nn.Conv3d(out_channels, out_channels, kernel_size=kernel_size, padding=padding)
         self.activation = activation
-        self.norm = norm(out_channels)
+        self.norm_1 = norm(out_channels)
+        self.norm_2 = norm(out_channels)
 
     def forward(self, x):
         x = self.conv_1(x)
         x = self.activation(x)
-        x = self.norm(x)
+        x = self.norm_1(x)
+        x = self.conv_2(x)
+        x = self.activation(x)
+        x = self.norm_2(x)
         return x
 
 
@@ -70,15 +69,20 @@ class FinalConvBlock(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size, padding, output_padding, activation, norm):
         super().__init__()
         self.conv_1 = nn.ConvTranspose3d(in_channels, out_channels, stride=2, output_padding=output_padding, kernel_size=kernel_size, padding=padding)
-        self.conv_2 = nn.Conv3d(out_channels, 1, kernel_size=kernel_size, padding=padding)
+        self.conv_2 = nn.Conv3d(out_channels, out_channels, kernel_size=kernel_size, padding=padding)
+        self.conv_3 = nn.Conv3d(out_channels, 1, kernel_size=1, padding=0)
         self.activation = activation
-        self.norm = norm(out_channels)
+        self.norm_1 = norm(out_channels)
+        self.norm_2 = norm(out_channels)
 
     def forward(self, x):
         x = self.conv_1(x)
         x = self.activation(x)
-        x = self.norm(x)
+        x = self.norm_1(x)
         x = self.conv_2(x)
+        x = self.activation(x)
+        x = self.norm_2(x)
+        x = self.conv_3(x)
         return x
 
 
@@ -93,9 +97,9 @@ class ConvAutoencoderBaseline(nn.Module):
                  image_shape: tuple,
                  flat_bottleneck: bool = True,
                  latent_dim: int = 100,
-                 activation: nn.Module = nn.SELU(),
+                 activation: nn.Module = nn.ReLU(),
                  norm: typing.Type[nn.Module] = nn.InstanceNorm3d,
-                 feat_map_sizes: list|tuple = (4, 32, 64, 128),
+                 feat_map_sizes: typing.Iterable = (4, 32, 64, 128),
                  final_activation: typing.Optional[str] = None,
                  ):
         super().__init__()

@@ -177,9 +177,9 @@ class MyAETrainer():
             self.write_loss_history(loss_history)
             self.evaluate_metrics()
             self.plot_metric_history()
-            write_val_predictions(self.model, self.dl_val, 'final', str(self.results_folder))
             plot_val_prediction_slices(self.model, self.dl_val, self.results_folder)
 
+        self.write_all_val_set_predictions()
         logger.info(f'[Accelerate device {self.accelerator.device}] Training complete!')
 
     def write_loss_history(self, loss_history):
@@ -204,6 +204,31 @@ class MyAETrainer():
 
         self.mean_val_metric_history.append((self.epoch, df_val.mean()))
         self.mean_train_metric_history.append((self.epoch, df_train.mean()))
+
+    def write_all_val_set_predictions(self):
+        """In this method we make predictions on the val set, and write out all predictions to file.
+        Each batch is stored as a separate file. The accelerator gather_for_metrics method is used to
+        correctly handle multi-GPU
+        """
+        outdir = self.results_folder / 'final_val_predictions'
+        outdir.mkdir(exist_ok=True)
+
+        if self.accelerator.is_main_process:
+            logger.info(f'Writing all val set predictions to {outdir}')
+
+        with torch.no_grad():
+            for i, batch in enumerate(self.dl_val):
+                pred = self.model(batch)
+
+                all_preds, all_data = self.accelerator.gather_for_metrics((pred, batch))
+
+                if self.accelerator.is_main_process:
+                    all_preds = all_preds.cpu().numpy().squeeze()
+                    all_data = all_data.cpu().numpy().squeeze()
+
+                    assert all_preds.shape == all_data.shape, f"Expected shape {all_data.shape}, got {all_preds.shape}"
+
+                    np.savez_compressed(outdir / f"{i}.npz", all_preds=all_preds, all_data=all_data)
 
     def plot_metric_history(self):
         epochs = [x[0] for x in self.mean_val_metric_history]
@@ -288,73 +313,67 @@ def write_val_predictions(model, dl_val, name: str, results_folder: str):
 
 
 def plot_samples(model, dl_val, name: str, results_folder: str, n_samples: int = 20):
+    # Note: this function is only executed by the main process
+    # Creates one plot per sample for the first n_samples in the validation set
+
+    n_samples = min(n_samples, len(dl_val))
 
     all_data_reconstructed = []
     all_data = []
 
-    with torch.no_grad():
-        for i, data in enumerate(dl_val):
+    for i, data in enumerate(dl_val):
+        pred = model(data)
+
+        batch_size = pred.shape[0]
+
+        for j in range(batch_size):
+            all_data_reconstructed.append(pred[j].detach().cpu().numpy().squeeze())
+            all_data.append(data[j].detach().cpu().numpy().squeeze())
 
             if len(all_data_reconstructed) >= n_samples:
                 break
 
-            pred = model(data)
-
-            batch_size = pred.shape[0]
-
-            for j in range(batch_size):
-                all_data_reconstructed.append(pred[j].cpu().numpy().squeeze())
-                all_data.append(data[j].cpu().numpy().squeeze())
+        if len(all_data_reconstructed) >= n_samples:
+            break
 
     all_data_reconstructed = np.stack(all_data_reconstructed, axis=0)
     all_data = np.stack(all_data, axis=0)
 
-    im_shape = all_data_reconstructed[0].shape
-    logger.info(f'Sampled sequence shape: {im_shape}')
-
-    # Now just visualise slices
-    fig, axs = plt.subplots(n_samples, 4, figsize=(16, 3 * n_samples), dpi=200)
-
-    for i in range(n_samples):
-        for j in range(4):
-
-                if j == 0:
-                    ax = axs[i, j]
-                    ax.set_title(f'Reconstructed (z={im_shape[2] // 2})')
-                    im = ax.imshow(all_data_reconstructed[i][:, :, im_shape[2] // 2], cmap="gray")
-                    fig.colorbar(im, ax=ax)
-
-                elif j == 1:
-                    ax = axs[i, j]
-                    ax.set_title(f'Reconstructed (y={im_shape[1] // 2})')
-                    im = ax.imshow(all_data_reconstructed[i][:, im_shape[1] // 2, :], cmap="gray")
-                    fig.colorbar(im, ax=ax)
-
-                elif j == 2:
-                    ax = axs[i, j]
-                    ax.set_title(f'Original (z={im_shape[2] // 2})')
-                    im = ax.imshow(all_data[i][:, :, im_shape[2] // 2], cmap="gray")
-                    fig.colorbar(im, ax=ax)
-
-                elif j == 3:
-                    ax = axs[i, j]
-                    ax.set_title('Original (y={im_shape[1] // 2})')
-                    im = ax.imshow(all_data[i][:, im_shape[1] // 2, :], cmap="gray")
-                    fig.colorbar(im, ax=ax)
+    logger.info(f'Reconstructed image shape: {all_data_reconstructed[0].shape}')
+    logger.info(f'Total number of samples: {len(all_data_reconstructed)}')
 
     outdir = Path(results_folder) / 'slice_plots'
     outdir.mkdir(exist_ok=True)
 
-    fig.tight_layout()
-    filename = outdir / f"{name}_samples_spatial_slice.png"
-    fig.savefig(filename)
-    plt.close(fig)
+    for i in range(n_samples):
+        fig, axs = plt.subplots(2, 3, figsize=(12, 8), dpi=200)
 
-    logger.info(f"Saved samples spatial slice plot to {filename}")
+        for j in range(3):
+            ax = axs[0, j]
+            ax.set_title(f'Original ({j}-slice)')
+            image = np.take(all_data[i], indices=all_data[i].shape[j] // 2, axis=j)
+            im = ax.imshow(image, cmap="gray")
+            fig.colorbar(im, ax=ax)
+
+            ax = axs[1, j]
+            ax.set_title(f'Reconstructed ({j}-slice)')
+            image = np.take(all_data_reconstructed[i], indices=all_data_reconstructed[i].shape[j] // 2, axis=j)
+            im = ax.imshow(image, cmap="gray")
+            fig.colorbar(im, ax=ax)
+
+
+        fig.tight_layout()
+        filename = outdir / f"{name}_{i}.png"
+        fig.savefig(filename)
+        plt.close(fig)
+
+        logger.info(f"Saved samples spatial slice plot to {filename}")
 
     # Create isosurface plots
+
     isosurface_folder = Path(results_folder) / "isosurface_plots"
     isosurface_folder.mkdir(exist_ok=True)
+
     for i in range(n_samples):
         write_isosurface_plot_from_arr(all_data_reconstructed[i],
                                        dx=all_data_reconstructed[0].shape[-1],
@@ -363,9 +382,7 @@ def plot_samples(model, dl_val, name: str, results_folder: str, n_samples: int =
                                        verbose=False)
 
         write_isosurface_plot_from_arr(all_data[i],
-                                        dx=all_data[0].shape[-1],
-                                        outname=isosurface_folder / f"{name}_{i}_original.png",
-                                        level=0.5,
-                                        verbose=False)
-
-
+                                       dx=all_data[0].shape[-1],
+                                       outname=isosurface_folder / f"{name}_{i}_original.png",
+                                       level=0.5,
+                                       verbose=False)
