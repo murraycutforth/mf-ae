@@ -1,9 +1,7 @@
 import unittest
-import tempfile
 
 import torch
 import torch.nn as nn
-from torch.utils.data import DataLoader, TensorDataset
 from src.trainer.trainer import MyAETrainer
 from src.models.conv_ae import ConvAutoencoderBaseline
 from src.evaluation.eval_ae_error import evaluate_autoencoder

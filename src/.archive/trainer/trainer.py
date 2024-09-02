@@ -1,5 +1,4 @@
 import json
-import math
 from pathlib import Path
 import logging
 
@@ -10,8 +9,6 @@ import torch
 import torch.nn as nn
 from accelerate import Accelerator
 from matplotlib import pyplot as plt
-from sklearn.decomposition import PCA
-from sklearn.neighbors import KernelDensity
 from torch.optim import Adam
 from torch.utils.data import DataLoader, Dataset
 from tqdm import tqdm

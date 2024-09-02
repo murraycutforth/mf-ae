@@ -6,13 +6,10 @@ import numpy as np
 import pandas as pd
 from sklearn.decomposition import IncrementalPCA
 from tqdm import tqdm
+from conv_ae_3d.metrics import compute_mae, compute_mse, linf_error, ssim_error, dice_coefficient
 
 from src.paths import project_dir, local_data_dir
 from src.plotting_utils import write_isosurface_plot_from_arr
-from src.trainer.trainer import MyAETrainer
-from src.models.conv_ae import ConvAutoencoderBaseline
-from src.evaluation.eval_ae_error import evaluate_autoencoder, compute_mae, compute_mse, linf_error, ssim_error, \
-    dice_coefficient
 from src.datasets.baseline_dataset import PhiDataset
 
 logger = logging.getLogger(__name__)
