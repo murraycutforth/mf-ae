@@ -14,6 +14,7 @@ import logging
 import subprocess
 import time
 from pathlib import Path
+import tempfile
 
 import pandas as pd
 import optuna
@@ -44,12 +45,14 @@ def objective(trial):
     trial_ind = trial.number
 
     jobscript = construct_bash_jobscript_yellowstone(trial)
-    slurm_command = construct_slurm_command(jobscript)
 
-    logger.info(f'Submitting job for trial {trial_ind}')
-    logger.info(f'  Command: {slurm_command}')
+    with tempfile.NamedTemporaryFile(mode='w', delete=True, suffix='sh') as f:
+        f.write(jobscript)
 
-    output = subprocess.run(slurm_command, shell=True)
+        logger.info(f'Submitting job for trial {trial_ind}')
+        logger.info(f'  Command: {jobscript}')
+
+        output = subprocess.run(f'sbatch {f.name}', shell=True)
 
     assert output.returncode == 0, f'Job submission failed with return code {output.returncode}'
 
@@ -88,7 +91,7 @@ def construct_bash_jobscript_yellowstone(trial) -> str:
 source /home/darve/mcc4/codes/pytorch/pytorch_cuda-11.8/bin/activate
 
 cd /home/darve/mcc4/mf-ae
-python -m src.main.main_train --data-dir="/home/darve/mcc4/data/multi_phase_droplet_data" --run-name="trial_{trial_ind}" --batch-size 1 --num-epochs 25 --save-and-sample-every 1000 --lr {lr} --feat-map-sizes 8 16 32 64 8
+python -m src.main.main_train --data-dir /home/darve/mcc4/data/multi_phase_droplet_data  --run-name trial_{trial_ind} --batch-size 1 --num-epochs 25 --save-and-sample-every 1000 --lr {lr} --feat-map-sizes 8 16 32 64 8
 '''
     return inner_cmd
 
