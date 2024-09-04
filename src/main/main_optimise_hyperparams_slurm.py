@@ -27,6 +27,8 @@ logger = logging.getLogger(__name__)
 OUTDIR = project_dir() / 'output' / 'hyperparam_tuning'
 OUTDIR.mkdir(exist_ok=True, parents=True)
 
+N_JOBS = 4  # Number of parallel jobs to run concurrently
+
 
 def main():
     logging.basicConfig(level=logging.INFO,
@@ -36,7 +38,7 @@ def main():
     logger.info('Starting hyperparameter tuning with Optuna')
 
     study = optuna.create_study(direction='maximize', study_name='debug', storage=f'sqlite:///{OUTDIR}/optuna.db')
-    study.optimize(objective, n_trials=1, n_jobs=1, timeout=None)
+    study.optimize(objective, n_trials=N_JOBS * 6, n_jobs=N_JOBS, timeout=None)  # Assumes 6 hrs per job, 48 hrs total, with leeway for queueing
 
     finalise_study(study, OUTDIR)
 
@@ -86,7 +88,7 @@ def construct_bash_jobscript_yellowstone(trial) -> str:
 
 #SBATCH -J trial_{trial_ind}               # Job name
 #SBATCH -N 1                  # Total number of nodes requested
-#SBATCH -t 12:05:00           # Run time (hh:mm:ss) - 5 minutes
+#SBATCH -t 5:55:00           # Run time (hh:mm:ss) - 5 minutes
 #SBATCH -p gpu-pascal
 
 source /home/darve/mcc4/codes/pytorch/pytorch_cuda-11.8/bin/activate
@@ -95,10 +97,6 @@ cd /home/darve/mcc4/mf-ae
 python -m src.main.main_train --data-dir /home/darve/mcc4/data/multi_phase_droplet_data  --run-name trial_{trial_ind} --batch-size 1 --num-epochs 25 --save-and-sample-every 1000 --lr {lr} --feat-map-sizes 8 16 32 64 8
 '''
     return inner_cmd
-
-
-def construct_slurm_command(jobscript: str) -> str:
-    return f'sbatch bash -c "{jobscript}"'
 
 
 if __name__ == '__main__':

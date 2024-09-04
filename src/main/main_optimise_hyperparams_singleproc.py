@@ -3,19 +3,9 @@
 import logging
 import argparse
 
-import matplotlib.pyplot as plt
 import torch.cuda
 from torch import nn
 import optuna
-from optuna.visualization.matplotlib import plot_contour
-from optuna.visualization.matplotlib import plot_edf
-from optuna.visualization.matplotlib import plot_intermediate_values
-from optuna.visualization.matplotlib import plot_optimization_history
-from optuna.visualization.matplotlib import plot_parallel_coordinate
-from optuna.visualization.matplotlib import plot_param_importances
-from optuna.visualization.matplotlib import plot_rank
-from optuna.visualization.matplotlib import plot_slice
-from optuna.visualization.matplotlib import plot_timeline
 from conv_ae_3d.trainer import MyAETrainer
 from conv_ae_3d.models.baseline_model import ConvAutoencoderBaseline
 from conv_ae_3d.metrics import MetricType
