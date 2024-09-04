@@ -12,7 +12,7 @@ class PhiDataset(Dataset):
     """Dataset class for loading compressed phi fields.
     Provides torch tensors of shape (1, 256, 256, 256)
     """
-    def __init__(self, data_dir: str, split: str):
+    def __init__(self, data_dir: str, split: str, debug: bool = False):
         # Find all .npz filenames in this dir
         self.data_dir = Path(data_dir)
         self.filenames = list(self.data_dir.glob("*.npz"))
@@ -45,6 +45,9 @@ class PhiDataset(Dataset):
             self.filenames = run_inds_to_filenames(run_inds[train_size:train_size+val_size])
         elif split == 'test':
             self.filenames = run_inds_to_filenames(run_inds[train_size+val_size:])
+
+        if debug:
+            self.filenames = self.filenames[:1]
 
         logger.info(f'Loaded {len(self.filenames)} files for split {split}')
 

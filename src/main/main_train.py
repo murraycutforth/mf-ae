@@ -36,7 +36,7 @@ def main():
         train_batch_size=args.batch_size,
         train_lr=args.lr,
         train_num_epochs=args.num_epochs,
-        save_and_sample_every=args.num_epochs // 5,
+        save_and_sample_every=args.save_and_sample_every,
         l2_reg=args.l2_reg,
         results_folder=outdir,
         cpu_only=not torch.cuda.is_available(),
@@ -84,13 +84,19 @@ def parse_args():
     parser.add_argument('--run-name', type=str, default='debug', help='Name of the run')
     parser.add_argument('--batch-size', type=int, default=1, help='Batch size for training')
     parser.add_argument('--num-epochs', type=int, default=20, help='Number of epochs to train for')
+    parser.add_argument('--save-and-sample-every', type=int, default=None, help='Save model and sample every n epochs')
     parser.add_argument('--lr', type=float, default=1e-4, help='Learning rate for training')
     parser.add_argument('--feat-map-sizes', type=int, nargs='+', default=[4, 4, 4], help='Feature map sizes for the model')
     parser.add_argument('--linear-layer-sizes', type=int, nargs='+', default=None, help='Linear layer sizes in the bottleneck of the model')
     parser.add_argument('--loss', type=str, default='mse', help='Loss function to use')
     parser.add_argument('--l2-reg', type=float, default=0, help='L2 regularization strength')
     parser.add_argument('--restart-from-milestone', type=int, default=None, help='Restart training from a specific milestone')
-    return parser.parse_args()
+    args = parser.parse_args()
+
+    if args.save_and_sample_every is None:
+        args.save_and_sample_every = args.num_epochs // 5
+
+    return args
 
 
 if __name__ == '__main__':
