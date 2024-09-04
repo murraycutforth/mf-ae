@@ -46,7 +46,7 @@ def objective(trial):
 
     jobscript = construct_bash_jobscript_yellowstone(trial)
 
-    with tempfile.NamedTemporaryFile(mode='rw', delete=True, suffix='sh') as f:
+    with tempfile.NamedTemporaryFile(mode='w', delete=True, suffix='sh') as f:
         f.write(jobscript)
         f.flush()
 
