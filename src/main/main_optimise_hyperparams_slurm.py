@@ -36,7 +36,7 @@ def main():
     logger.info('Starting hyperparameter tuning with Optuna')
 
     study = optuna.create_study(direction='maximize', study_name='debug', storage=f'sqlite:///{OUTDIR}/optuna.db')
-    study.optimize(objective, n_trials=3, n_jobs=3, timeout=None)
+    study.optimize(objective, n_trials=1, n_jobs=1, timeout=None)
 
     finalise_study(study, OUTDIR)
 
@@ -46,8 +46,9 @@ def objective(trial):
 
     jobscript = construct_bash_jobscript_yellowstone(trial)
 
-    with tempfile.NamedTemporaryFile(mode='w', delete=True, suffix='sh') as f:
+    with tempfile.NamedTemporaryFile(mode='rw', delete=True, suffix='sh') as f:
         f.write(jobscript)
+        f.flush()
 
         logger.info(f'Submitting job for trial {trial_ind}')
         logger.info(f'  Command: {jobscript}')
