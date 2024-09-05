@@ -50,10 +50,31 @@ def main():
 
 
 def construct_model(args):
+
+    if args.activation == 'relu':
+        activation = nn.ReLU()
+    elif args.activation == 'leakyrelu':
+        activation = nn.LeakyReLU()
+    elif args.activation == 'selu':
+        activation = nn.SELU()
+    elif args.activation == 'elu':
+        activation = nn.ELU()
+    else:
+        raise ValueError(f'Activation function {args.activation} not supported')
+
+    if args.normalization == 'batch':
+        norm = nn.BatchNorm3d
+    elif args.normalization == 'instance':
+        norm = nn.InstanceNorm3d
+    elif args.normalization == 'layer':
+        norm = nn.LayerNorm
+    else:
+        raise ValueError(f'Normalization layer {args.normalization} not supported')
+
     model = ConvAutoencoderBaseline(
         image_shape=(256, 256, 256),
-        activation=nn.ReLU(),
-        norm=nn.InstanceNorm3d,
+        activation=activation,
+        norm=norm,
         feat_map_sizes=args.feat_map_sizes,
         linear_layer_sizes=args.linear_layer_sizes,
         final_activation='sigmoid',
@@ -90,6 +111,8 @@ def parse_args():
     parser.add_argument('--linear-layer-sizes', type=int, nargs='+', default=None, help='Linear layer sizes in the bottleneck of the model')
     parser.add_argument('--loss', type=str, default='mse', help='Loss function to use')
     parser.add_argument('--l2-reg', type=float, default=0, help='L2 regularization strength')
+    parser.add_argument('--activation', type=str, default='relu', help='Activation function to use')
+    parser.add_argument('--normalization', type=str, default='instance', help='Normalization layer to use')
     parser.add_argument('--restart-from-milestone', type=int, default=None, help='Restart training from a specific milestone')
     args = parser.parse_args()
 

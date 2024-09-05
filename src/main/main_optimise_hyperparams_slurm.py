@@ -37,8 +37,8 @@ def main():
 
     logger.info('Starting hyperparameter tuning with Optuna')
 
-    study = optuna.create_study(direction='maximize', study_name='debug', storage=f'sqlite:///{OUTDIR}/optuna.db')
-    study.optimize(objective, n_trials=N_JOBS * 6, n_jobs=N_JOBS, timeout=None)  # Assumes 6 hrs per job, 48 hrs total, with leeway for queueing
+    study = optuna.create_study(direction='maximize', study_name='yellowstone_1', storage=f'sqlite:///{OUTDIR}/optuna.db')
+    study.optimize(objective, n_trials=N_JOBS * 3, n_jobs=N_JOBS, timeout=None)  # Assumes 12 hrs per job, 48 hrs total, with leeway for queueing
 
     finalise_study(study, OUTDIR)
 
@@ -81,20 +81,26 @@ def objective(trial):
 
 def construct_bash_jobscript_yellowstone(trial) -> str:
 
+    # Define search space
     lr = trial.suggest_float('lr', 1e-6, 1e-2, log=True)
+    l2_reg = trial.suggest_float('l2_reg', 1e-8, 1e-2, log=True)
+    activation = trial.suggest_categorical('activation', ['relu', 'leakyrelu', 'selu', 'elu'])
+    norm = trial.suggest_categorical('norm', ['batch', 'instance', 'layer'])
+    loss = trial.suggest_categorical('loss', ['mse', 'l1'])
+
     trial_ind = trial.number
 
     inner_cmd = f'''#!/bin/bash
 
 #SBATCH -J trial_{trial_ind}               # Job name
 #SBATCH -N 1                  # Total number of nodes requested
-#SBATCH -t 5:55:00           # Run time (hh:mm:ss) - 5 minutes
+#SBATCH -t 11:55:00           # Run time (hh:mm:ss)
 #SBATCH -p gpu-pascal
 
 source /home/darve/mcc4/codes/pytorch/pytorch_cuda-11.8/bin/activate
 
 cd /home/darve/mcc4/mf-ae
-python -m src.main.main_train --data-dir /home/darve/mcc4/data/multi_phase_droplet_data  --run-name trial_{trial_ind} --batch-size 1 --num-epochs 25 --save-and-sample-every 1000 --lr {lr} --feat-map-sizes 8 16 32 64 8
+python -m src.main.main_train --data-dir /home/darve/mcc4/data/multi_phase_droplet_data  --run-name trial_{trial_ind} --batch-size 1 --num-epochs 30 --save-and-sample-every 1000 --lr {lr} --activation {activation} --normalization {norm} --l2-reg {l2_reg} --loss {loss} --feat-map-sizes 8 16 32 64 8
 '''
     return inner_cmd
 

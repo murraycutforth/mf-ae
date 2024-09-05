@@ -1,4 +1,6 @@
-"""In this script """
+"""In this script we conduct hyper-param tuning using Optuna. This script is intended to be run on a single machine,
+jobs are run sequentially in the same process.
+"""
 
 import logging
 import argparse
