@@ -66,8 +66,6 @@ def construct_model(args):
         norm = nn.BatchNorm3d
     elif args.normalization == 'instance':
         norm = nn.InstanceNorm3d
-    elif args.normalization == 'layer':
-        norm = nn.LayerNorm
     else:
         raise ValueError(f'Normalization layer {args.normalization} not supported')
 

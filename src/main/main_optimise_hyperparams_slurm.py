@@ -24,7 +24,7 @@ from src.paths import project_dir
 
 logger = logging.getLogger(__name__)
 
-OUTDIR = project_dir() / 'output' / 'hyperparam_tuning'
+OUTDIR = project_dir() / 'output' / 'hyperparam_tuning_conv'
 OUTDIR.mkdir(exist_ok=True, parents=True)
 
 N_JOBS = 4  # Number of parallel jobs to run concurrently
@@ -38,7 +38,7 @@ def main():
     logger.info('Starting hyperparameter tuning with Optuna')
 
     study = optuna.create_study(direction='maximize', study_name='yellowstone_1', storage=f'sqlite:///{OUTDIR}/optuna.db')
-    study.optimize(objective, n_trials=N_JOBS * 3, n_jobs=N_JOBS, timeout=None)  # Assumes 12 hrs per job, 48 hrs total, with leeway for queueing
+    study.optimize(objective, n_trials=N_JOBS * 3, n_jobs=N_JOBS, timeout=48 * 60 * 60)  # Assumes 12 hrs per job, 48 hrs total, with leeway for queueing
     finalise_study(study, OUTDIR)
 
 
@@ -56,7 +56,8 @@ def objective(trial):
         logger.info(f'Submitting job for trial {trial_ind}')
         logger.info(f'  Command: {jobscript}')
 
-        output = subprocess.run(f'sbatch {f.name}', shell=True)
+        output = subprocess.run(f'sbatch {f.name}', shell=True, capture_output=True, text=True)
+        logger.info(f'sbatch output: {output.stdout}')
 
     assert output.returncode == 0, f'Job submission failed with return code {output.returncode}'
 
@@ -71,6 +72,15 @@ def objective(trial):
 
     while not metrics_path.exists():  # Refer to MyConvAETrainer::evaluate_metrics for this path
         time.sleep(10)
+
+        # Check if job has timed out
+        trial_start = trial.datetime_start
+        now = pd.Timestamp.now(tz=trial_start.tz)
+        elapsed = now - trial_start
+
+        if elapsed.total_seconds() > 12 * 60 * 60:  # Assuming 12 hrs per trial
+            logger.warning(f'Trial {trial_ind} has failed or timed out')
+            return None
 
     logger.info(f'Job for trial {trial_ind} has completed, output in {metrics_path}')
 
@@ -90,7 +100,7 @@ def construct_bash_jobscript_yellowstone(trial) -> str:
     lr = trial.suggest_float('lr', 1e-6, 1e-2, log=True)
     l2_reg = trial.suggest_float('l2_reg', 1e-8, 1e-2, log=True)
     activation = trial.suggest_categorical('activation', ['relu', 'leakyrelu', 'selu', 'elu'])
-    norm = trial.suggest_categorical('norm', ['batch', 'instance', 'layer'])
+    norm = trial.suggest_categorical('norm', ['batch', 'instance'])
     loss = trial.suggest_categorical('loss', ['mse', 'l1'])
 
     trial_ind = trial.number
