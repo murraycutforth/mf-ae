@@ -39,11 +39,12 @@ def main():
 
     study = optuna.create_study(direction='maximize', study_name='yellowstone_1', storage=f'sqlite:///{OUTDIR}/optuna.db')
     study.optimize(objective, n_trials=N_JOBS * 3, n_jobs=N_JOBS, timeout=None)  # Assumes 12 hrs per job, 48 hrs total, with leeway for queueing
-
     finalise_study(study, OUTDIR)
 
 
 def objective(trial):
+    """Objective function. Submit a job, and then wait until the job has completed and written results to disk.
+    """
     trial_ind = trial.number
 
     jobscript = construct_bash_jobscript_yellowstone(trial)
@@ -66,12 +67,14 @@ def objective(trial):
 
     logger.info(f'Job for trial {trial_ind} has started, output in {job_outdir}')
 
-    while not (job_outdir / 'val_metrics_25.csv').exists():
+    metrics_path = job_outdir / 'metrics' / 'val_metrics_30.csv'
+
+    while not metrics_path.exists():  # Refer to MyConvAETrainer::evaluate_metrics for this path
         time.sleep(10)
 
-    logger.info(f'Job for trial {trial_ind} has completed, output in {job_outdir}')
+    logger.info(f'Job for trial {trial_ind} has completed, output in {metrics_path}')
 
-    val_metrics = pd.read_csv(job_outdir / 'val_metrics_25.csv')
+    val_metrics = pd.read_csv(metrics_path)
     val_dice = val_metrics['dice'].mean()
 
     logger.info(f'Validation dice for trial {trial_ind}: {val_dice}')
@@ -80,6 +83,8 @@ def objective(trial):
 
 
 def construct_bash_jobscript_yellowstone(trial) -> str:
+    """Construct a bash script to submit a job to the yellowstone cluster.
+    """
 
     # Define search space
     lr = trial.suggest_float('lr', 1e-6, 1e-2, log=True)
