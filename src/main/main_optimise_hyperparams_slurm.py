@@ -13,6 +13,7 @@ Notes:
 import logging
 import subprocess
 import time
+from datetime import datetime
 from pathlib import Path
 import tempfile
 
@@ -38,7 +39,7 @@ def main():
     logger.info('Starting hyperparameter tuning with Optuna')
 
     study = optuna.create_study(direction='maximize', study_name='yellowstone_1', storage=f'sqlite:///{OUTDIR}/optuna.db')
-    study.optimize(objective, n_trials=N_JOBS * 3, n_jobs=N_JOBS, timeout=48 * 60 * 60)  # Assumes 12 hrs per job, 48 hrs total, with leeway for queueing
+    study.optimize(objective, n_trials=N_JOBS * 3, n_jobs=N_JOBS, timeout=48 * 60 * 60 - 60)  # Assumes 12 hrs per job, 48 hrs total, with leeway for queueing
     finalise_study(study, OUTDIR)
 
 
@@ -75,10 +76,10 @@ def objective(trial):
 
         # Check if job has timed out
         trial_start = trial.datetime_start
-        now = pd.Timestamp.now(tz=trial_start.tz)
+        now = datetime.now()
         elapsed = now - trial_start
 
-        if elapsed.total_seconds() > 12 * 60 * 60:  # Assuming 12 hrs per trial
+        if elapsed.total_seconds() > 12 * 60 * 60 - 10:  # Assuming 12 hrs per trial
             logger.warning(f'Trial {trial_ind} has failed or timed out')
             return None
 
