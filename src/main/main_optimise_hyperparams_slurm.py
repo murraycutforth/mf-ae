@@ -69,7 +69,7 @@ def objective(trial):
 
     logger.info(f'Job for trial {trial_ind} has started, output in {job_outdir}')
 
-    metrics_path = job_outdir / 'metrics' / 'val_metrics_30.csv'
+    metrics_path = job_outdir / 'metrics' / 'val_metrics_25.csv'
 
     while not metrics_path.exists():  # Refer to MyConvAETrainer::evaluate_metrics for this path
         time.sleep(10)
@@ -86,7 +86,7 @@ def objective(trial):
     logger.info(f'Job for trial {trial_ind} has completed, output in {metrics_path}')
 
     val_metrics = pd.read_csv(metrics_path)
-    val_dice = val_metrics['dice'].mean()
+    val_dice = val_metrics['DICE'].mean()
 
     logger.info(f'Validation dice for trial {trial_ind}: {val_dice}')
 
@@ -116,7 +116,7 @@ def construct_bash_jobscript_yellowstone(trial) -> str:
 source /home/darve/mcc4/codes/pytorch/pytorch_cuda-11.8/bin/activate
 
 cd /home/darve/mcc4/mf-ae
-python -m src.main.main_train --data-dir /home/darve/mcc4/data/multi_phase_droplet_data  --run-name trial_{trial_ind} --batch-size 1 --num-epochs 30 --save-and-sample-every 1000 --lr {lr} --activation {activation} --normalization {norm} --l2-reg {l2_reg} --loss {loss} --feat-map-sizes 8 16 32 64 8
+python -m src.main.main_train --data-dir /home/darve/mcc4/data/multi_phase_droplet_data  --run-name trial_{trial_ind} --batch-size 1 --num-epochs 25 --save-and-sample-every 1000 --lr {lr} --activation {activation} --normalization {norm} --l2-reg {l2_reg} --loss {loss} --feat-map-sizes 8 16 32 64 8
 '''
     return inner_cmd
 
