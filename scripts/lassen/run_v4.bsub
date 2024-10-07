@@ -3,7 +3,7 @@
 #BSUB -q pbatch
 
 # Get first argument to script
-sub_ver = $1
+sub_ver=$1
 
 echo "Starting job at $(date)"
 jsrun -n 1 -r 1 -a 1 -c 10 -g 1 ./run_v4_${sub_ver}.sh
