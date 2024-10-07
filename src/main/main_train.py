@@ -1,5 +1,6 @@
 import argparse
 import logging
+from pathlib import Path
 
 import torch.cuda
 from torch import nn
@@ -16,7 +17,7 @@ logger = logging.getLogger(__name__)
 def main():
     args = parse_args()
 
-    outdir = project_dir() / 'output' / args.run_name
+    outdir = Path(args.outdir)
     outdir.mkdir(exist_ok=True, parents=True)
 
     logging.basicConfig(level=logging.INFO,
@@ -100,6 +101,7 @@ def construct_loss(args):
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--data-dir', type=str, default=local_data_dir(), help='Path to data directory')
+    parser.add_argument('--outdir', type=str, default=None, help='Path to output directory')
     parser.add_argument('--run-name', type=str, default='debug', help='Name of the run')
     parser.add_argument('--batch-size', type=int, default=1, help='Batch size for training')
     parser.add_argument('--num-epochs', type=int, default=20, help='Number of epochs to train for')
@@ -116,6 +118,9 @@ def parse_args():
 
     if args.save_and_sample_every is None:
         args.save_and_sample_every = args.num_epochs // 5
+
+    if args.outdir is None:
+        args.outdir = project_dir() / 'output' / args.run_name
 
     return args
 
