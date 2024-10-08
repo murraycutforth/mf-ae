@@ -41,7 +41,7 @@ def main():
         l2_reg=args.l2_reg,
         results_folder=outdir,
         cpu_only=not torch.cuda.is_available(),
-        num_dl_workers=0 if args.in_memory_dataset else 8,
+        num_dl_workers=-1,
         loss=loss,
         restart_from_milestone=args.restart_from_milestone,
         metric_types=[MetricType.MSE, MetricType.MAE, MetricType.LINF, MetricType.DICE, MetricType.HAUSDORFF],
@@ -128,6 +128,8 @@ def parse_args():
 
     if args.outdir is None:
         args.outdir = project_dir() / 'output' / args.run_name
+    else:
+        args.outdir = Path(args.outdir) / args.run_name
 
     return args
 
