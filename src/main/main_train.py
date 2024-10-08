@@ -9,7 +9,7 @@ from conv_ae_3d.trainer import MyAETrainer
 from conv_ae_3d.metrics import MetricType
 
 from src.paths import project_dir, local_data_dir
-from src.datasets.baseline_dataset import PhiDataset
+from src.datasets.baseline_dataset import PhiDataset, PhiDatasetInMemory
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +41,7 @@ def main():
         l2_reg=args.l2_reg,
         results_folder=outdir,
         cpu_only=not torch.cuda.is_available(),
-        num_dl_workers=8,
+        num_dl_workers=0 if args.in_memory_dataset else 8,
         loss=loss,
         restart_from_milestone=args.restart_from_milestone,
         metric_types=[MetricType.MSE, MetricType.MAE, MetricType.LINF, MetricType.DICE, MetricType.HAUSDORFF],
@@ -83,10 +83,16 @@ def construct_model(args):
 
 
 def construct_datasets(args) -> dict:
-    return {
-        'train': PhiDataset(data_dir=args.data_dir, split='train'),
-        'val': PhiDataset(data_dir=args.data_dir, split='val'),
-    }
+    if not args.in_memory_dataset:
+        return {
+            'train': PhiDataset(data_dir=args.data_dir, split='train'),
+            'val': PhiDataset(data_dir=args.data_dir, split='val'),
+        }
+    else:
+        return {
+            'train': PhiDatasetInMemory(data_dir=args.data_dir, split='train'),
+            'val': PhiDatasetInMemory(data_dir=args.data_dir, split='val'),
+        }
 
 
 def construct_loss(args):
@@ -114,6 +120,7 @@ def parse_args():
     parser.add_argument('--activation', type=str, default='relu', help='Activation function to use')
     parser.add_argument('--normalization', type=str, default='instance', help='Normalization layer to use')
     parser.add_argument('--restart-from-milestone', type=int, default=None, help='Restart training from a specific milestone')
+    parser.add_argument('--in-memory-dataset', action='store_true', help='Load dataset in memory')
     args = parser.parse_args()
 
     if args.save_and_sample_every is None:

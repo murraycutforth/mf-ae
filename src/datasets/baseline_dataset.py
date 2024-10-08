@@ -66,5 +66,13 @@ class PhiDataset(Dataset):
         return phi
 
 
+class PhiDatasetInMemory(PhiDataset):
+    """Dataset class for loading compressed phi fields. Stores all data in memory.
+    """
+    def __init__(self, data_dir: str, split: str, debug: bool = False):
+        super().__init__(data_dir, split, debug)
+        self.data = [torch.tensor(np.load(f)['phi'], dtype=torch.float32).unsqueeze(0) for f in self.filenames]
 
-
+    def __getitem__(self, idx):
+        phi = self.data[idx]
+        return phi
