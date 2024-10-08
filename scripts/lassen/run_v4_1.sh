@@ -4,5 +4,5 @@ export PYTHONPATH=/usr/workspace/cutforth1/density-generative-model
 
 cd /g/g91/cutforth1/mf-ae
 
-conda run -n genmodel_env python -m src.main.main_train --data-dir="/p/vast1/cutforth1/mf-ae-data" --outdir="/p/vast1/cutforth1/mf-ae-output" --run-name="v4_1" --batch-size="1" --num-epochs="100" --lr="1e-4" --feat-map-sizes 8 16 32 64 8 --activation="elu" --normalization="instance" --l2_reg="1e-6" --loss="mse"
+conda run -n genmodel_env python -m src.main.main_train --data-dir="/p/vast1/cutforth1/mf-ae-data" --outdir="/p/vast1/cutforth1/mf-ae-output" --run-name="v4_1" --batch-size="1" --num-epochs="100" --lr="1e-4" --feat-map-sizes 8 16 32 64 8 --activation="elu" --normalization="instance" --l2-reg="1e-6" --loss="mse"
 
