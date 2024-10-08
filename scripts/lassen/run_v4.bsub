@@ -1,6 +1,6 @@
 #BSUB -W 720
 #BSUB -G stanford
-#BSUB -q pdebug
+#BSUB -q pbatch
 
 # Get first argument to script
 sub_ver=$1
