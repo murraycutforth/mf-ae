@@ -5,3 +5,5 @@ data
 __pycache__
 *.pyc
 test/test_training_output
+test/*.csv
+src/.archive

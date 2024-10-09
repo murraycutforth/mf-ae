@@ -41,7 +41,7 @@ def main():
         l2_reg=args.l2_reg,
         results_folder=outdir,
         cpu_only=not torch.cuda.is_available(),
-        num_dl_workers=-1,
+        num_dl_workers=8,
         loss=loss,
         restart_from_milestone=args.restart_from_milestone,
         metric_types=[MetricType.MSE, MetricType.MAE, MetricType.LINF, MetricType.DICE, MetricType.HAUSDORFF],
@@ -124,7 +124,7 @@ def parse_args():
     args = parser.parse_args()
 
     if args.save_and_sample_every is None:
-        args.save_and_sample_every = args.num_epochs // 5
+        args.save_and_sample_every = args.num_epochs // 4
 
     if args.outdir is None:
         args.outdir = project_dir() / 'output' / args.run_name
