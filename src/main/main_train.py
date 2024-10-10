@@ -43,6 +43,7 @@ def main():
         cpu_only=not torch.cuda.is_available(),
         num_dl_workers=8,
         loss=loss,
+        restart_dir=args.restart_dir,
         restart_from_milestone=args.restart_from_milestone,
         metric_types=[MetricType.MSE, MetricType.MAE, MetricType.LINF, MetricType.DICE, MetricType.HAUSDORFF],
     )
@@ -120,6 +121,7 @@ def parse_args():
     parser.add_argument('--activation', type=str, default='relu', help='Activation function to use')
     parser.add_argument('--normalization', type=str, default='instance', help='Normalization layer to use')
     parser.add_argument('--restart-from-milestone', type=int, default=None, help='Restart training from a specific milestone')
+    parser.add_argument('--restart-dir', type=str, default=None, help='Directory to restart training from')
     parser.add_argument('--in-memory-dataset', action='store_true', help='Load dataset in memory')
     args = parser.parse_args()
 
