@@ -1,0 +1,8 @@
+#BSUB -W 720
+#BSUB -G stanford
+#BSUB -q pbatch
+
+echo "Starting job at $(date)"
+jsrun -n1 -r1 -a1 -c10 -g1 ./run_v4_2.sh
+echo "jsrun exit code: $?"
+echo "Job complete at $(date)"

@@ -1,6 +1,6 @@
-bsub run_v4.bsub 0
-bsub run_v4.bsub 1
-bsub run_v4.bsub 2
-bsub run_v4.bsub 3
-bsub run_v4.bsub 4
-bsub run_v4.bsub 5
+#bsub run_v4_0.bsub
+#bsub run_v4_1.bsub
+bsub run_v4_2.bsub
+bsub run_v4_3.bsub
+bsub run_v4_4.bsub
+bsub run_v4_5.bsub

@@ -7,3 +7,4 @@ __pycache__
 test/test_training_output
 test/*.csv
 src/.archive
+*.out
