@@ -44,7 +44,7 @@ def main():
     )
 
     trainer.eval()
-    
+
 
 if __name__ == '__main__':
     main()

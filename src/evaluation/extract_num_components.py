@@ -10,14 +10,20 @@ def compute_num_components(arr: np.ndarray) -> int:
     # Return total number of connected components
 
     arr_ = arr.astype(int)
-    _, num = label(arr_)
+    _, num = label(arr_, return_num=True)
     return num
 
 
 def compute_surface_area_volume_ratio(arr: np.ndarray) -> float:
-    # Compute sigma, large value corresponds to a fine spray
-    # Units of [voxel length]^{-1}
+    """Computed sigma, the surface area to volume ratio of the volume
 
+    Note:
+        This is a measure of the "fineness" of the spray, with larger values corresponding to finer sprays
+        Units of [voxel length]^{-1}
+
+    Args:
+        arr (np.ndarray): Indicator function, 1 inside material, 0 outside (may be smoothed)
+    """
     verts, faces, normals, values = marching_cubes(
         arr, level=0.5, spacing=(1, 1, 1), allow_degenerate=False, method='lewiner'
     )

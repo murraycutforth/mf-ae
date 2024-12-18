@@ -10,7 +10,7 @@ from conv_ae_3d.metrics import compute_mae, compute_mse, linf_error, ssim_error,
 
 from src.paths import project_dir, local_data_dir
 from src.plotting_utils import write_isosurface_plot_from_arr
-from src.datasets.baseline_dataset import PhiDataset
+from src.datasets.phi_field_dataset import PhiDataset
 
 logger = logging.getLogger(__name__)
 

@@ -1,0 +1,17 @@
+numpy
+matplotlib
+pandas
+scikit-learn
+scipy
+scikit-image
+pyvista
+jupyterlab
+jupyter
+trame
+tqdm
+torch
+denoising-diffusion-pytorch
+accelerate
+ema-pytorch
+einops
+-e file:///Users/murray/Projects/ConvAE3D

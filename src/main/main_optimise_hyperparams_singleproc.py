@@ -14,7 +14,7 @@ from conv_ae_3d.metrics import MetricType
 
 from src.optuna_utils import finalise_study
 from src.paths import project_dir, local_data_dir
-from src.datasets.baseline_dataset import PhiDataset
+from src.datasets.phi_field_dataset import PhiDataset
 
 logger = logging.getLogger(__name__)
 
