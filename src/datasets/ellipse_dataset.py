@@ -63,7 +63,7 @@ class EllipseDataset(Dataset):
 
         logger.info(f'Generated {num_samples} samples of ellipse data with interface representation {interface_rep}')
         logger.info(f'Each sample has shape {self.data[0].shape}')
-        logger.info(f'Total memory usage: {sum([d.nbytes for d in self.data]) / 1e6} MB')
+        #logger.info(f'Total memory usage: {sum([d.nbytes for d in self.data]) / 1e6} MB')  # Lassen pytorch < v1.11
 
     def compute_norm_params(self):
         # Compute params for minmax normalization to range of [0, 1]
