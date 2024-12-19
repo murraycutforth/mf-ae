@@ -71,7 +71,7 @@ def create_run_script(i, run_name, args_dict):
     with open(f"run_ae_training_v{VERSION}_{i}.sh", "w") as f:
         f.write("source /usr/workspace/cutforth1/anaconda/bin/activate\n")
         f.write("export LD_LIBRARY_PATH=/opt/ibm/spectrumcomputing/lsf/10.1.0.10/linux3.10-glibc2.17-ppc64le-csm/lib\n")
-        f.write("export PYTHONPATH=/usr/workspace/cutforth1/density-generative-model\n")
+        f.write("export PYTHONPATH=/g/g91/cutforth1/mf-ae\n")
         f.write("cd /g/g91/cutforth1/mf-ae\n")
 
         param_str = ""
@@ -107,7 +107,7 @@ def create_debug_script(args_dict):
     with open(f"run_ae_training_v{VERSION}_debug.sh", "w") as f:
         f.write("source /usr/workspace/cutforth1/anaconda/bin/activate\n")
         f.write("export LD_LIBRARY_PATH=/opt/ibm/spectrumcomputing/lsf/10.1.0.10/linux3.10-glibc2.17-ppc64le-csm/lib\n")
-        f.write("export PYTHONPATH=/usr/workspace/cutforth1/density-generative-model\n")
+        f.write("export PYTHONPATH=/g/g91/cutforth1/mf-ae\n")
         f.write("cd /g/g91/cutforth1/mf-ae\n")
         f.write(f"conda run -n genmodel_env accelerate launch ./src/main/main_train.py --debug {param_str}\n")
 
