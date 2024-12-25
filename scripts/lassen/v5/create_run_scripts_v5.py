@@ -11,12 +11,13 @@ VERSION = 5
 
 def main():
     search_args = {
-        'dim': [4, 8, 16],
+        'dim': [4, 8, 16, 32],
         'interface-representation': ['heaviside', 'diffuse', 'sdf'],
     }
 
     const_args = {
-        'dataset-type': 'ellipse',
+        'dataset-type': 'patch_ellipse',
+        'patch-size': 64,
         'num-dl-workers': 0,
         'batch-size': 1,
         'num-epochs': 10,

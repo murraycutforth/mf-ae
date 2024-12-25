@@ -13,7 +13,7 @@ from conv_ae_3d.metrics import MetricType
 from src.interface_representation import InterfaceRepresentationType
 from src.paths import project_dir
 from src.datasets.phi_field_dataset import PhiDataset, PhiDatasetInMemory
-from src.datasets.ellipse_dataset import EllipseDataset
+from src.datasets.ellipse_dataset import EllipseDataset, PatchEllipseDataset
 
 logger = logging.getLogger(__name__)
 
@@ -129,6 +129,11 @@ def construct_datasets(args) -> dict:
             'train': EllipseDataset(debug=args.debug, interface_rep=interface_representation),
             'val': EllipseDataset(debug=args.debug, interface_rep=interface_representation),
         }
+    elif args.dataset_type == 'patch_ellipse':
+        return {
+            'train': PatchEllipseDataset(debug=args.debug, interface_rep=interface_representation, patch_size=args.patch_size),
+            'val': PatchEllipseDataset(debug=args.debug, interface_rep=interface_representation, patch_size=args.patch_size),
+        }
     elif args.dataset_type == 'phi_field_hit':
         raise NotImplementedError
 
@@ -166,6 +171,7 @@ def parse_args():
     parser.add_argument('--debug', action='store_true', help='Debug mode - run with just a few data samples')
     parser.add_argument('--in-memory-dataset', action='store_true', help='Load dataset into memory')
     parser.add_argument('--interface-representation', type=str, default='heaviside', help='Interface representation to use')
+    parser.add_argument('--patch-size', type=int, default=64, help='Size of patches for patch dataset')
 
     # Training args
     parser.add_argument('--batch-size', type=int, default=1, help='Batch size for training')

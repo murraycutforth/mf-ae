@@ -84,6 +84,54 @@ class EllipseDataset(Dataset):
         return self.data[idx]
 
 
+class PatchEllipseDataset(EllipseDataset):
+    """Patch-based dataset class for synthetic ellipse data, parameterized by center and radius. The volumes are hard-coded to 256^3.
+    The interface representation (sharp/diffuse/sdf) is specified on construction.
+    """
+    def __init__(self,
+                 debug: bool = False,
+                 num_samples: int = 100,
+                 patch_size: int = 32,
+                 interface_rep: InterfaceRepresentationType = InterfaceRepresentationType.HEAVISIDE):
+        super().__init__(debug=debug, num_samples=num_samples, interface_rep=interface_rep)
+
+        assert patch_size <= 256, 'Patch size must be less than or equal'
+        self.patch_size = patch_size
+        self.num_patches_per_volume = (self.data[0].numel() // self.patch_size**3)
+        self.patch_data = []
+        self.volume_ids = []
+        np.random.seed(42)  # Ensure reproducibility in random patch selection
+
+        for i in range(len(self.data) * self.num_patches_per_volume):
+            volume_id = i // self.num_patches_per_volume
+            volume = self.data[volume_id]
+            patch = self.extract_patch(volume)
+            self.patch_data.append(patch)
+            self.volume_ids.append(volume_id)
+
+        assert self.num_samples * self.num_patches_per_volume == len(self.patch_data), 'Mismatch in number of patches'
+        logger.info(f'Generated {len(self.patch_data)} patches of size {patch_size}^3 from {len(self.data)} volumes')
+
+    def extract_patch(self, volume):
+        patch_start_inds = np.random.randint(0, 256 - self.patch_size, 3)
+        patch_end_inds = [ind + self.patch_size for ind in patch_start_inds]
+        return volume[:,
+                patch_start_inds[0]:patch_end_inds[0],
+               patch_start_inds[1]:patch_end_inds[1],
+               patch_start_inds[2]:patch_end_inds[2]]
+
+    def __len__(self):
+        return len(self.patch_data)
+
+    def __getitem__(self, idx):
+        return self.patch_data[idx]
+
+
+
+
+
+
+
 
 
 
