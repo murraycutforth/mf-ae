@@ -20,8 +20,8 @@ def main():
         'patch-size': 64,
         'num-dl-workers': 0,
         'batch-size': 1,
-        'num-epochs': 10,
-        'save-and-sample-every': 1,
+        'num-epochs': 30,
+        'save-and-sample-every': 5,
         'lr': 1e-4,
         'loss': 'l1',
         'dim-mults': '1 2 4 8 8',
@@ -72,8 +72,8 @@ def create_run_script(i, run_name, args_dict):
     with open(f"run_ae_training_v{VERSION}_{i}.sh", "w") as f:
         f.write("source /usr/workspace/cutforth1/anaconda/bin/activate\n")
         f.write("export LD_LIBRARY_PATH=/opt/ibm/spectrumcomputing/lsf/10.1.0.10/linux3.10-glibc2.17-ppc64le-csm/lib\n")
-        f.write("export PYTHONPATH=/g/g91/cutforth1/mf-ae\n")
-        f.write("cd /g/g91/cutforth1/mf-ae\n")
+        f.write("export PYTHONPATH=/usr/WS1/cutforth1/mf-ae\n")
+        f.write("cd /usr/WS1/cutforth1/mf-ae\n")
 
         param_str = ""
         for k, v in args_dict.items():
@@ -108,8 +108,8 @@ def create_debug_script(args_dict):
     with open(f"run_ae_training_v{VERSION}_debug.sh", "w") as f:
         f.write("source /usr/workspace/cutforth1/anaconda/bin/activate\n")
         f.write("export LD_LIBRARY_PATH=/opt/ibm/spectrumcomputing/lsf/10.1.0.10/linux3.10-glibc2.17-ppc64le-csm/lib\n")
-        f.write("export PYTHONPATH=/g/g91/cutforth1/mf-ae\n")
-        f.write("cd /g/g91/cutforth1/mf-ae\n")
+        f.write("export PYTHONPATH=/usr/WS1/cutforth1/mf-ae\n")
+        f.write("cd /usr/WS1/cutforth1/mf-ae\n")
         f.write(f"conda run -n genmodel_env accelerate launch ./src/main/main_train.py --debug {param_str}\n")
 
     # Create corresponding .bsub
