@@ -123,8 +123,14 @@ def construct_datasets(args) -> dict:
 
     if args.dataset_type == 'ellipse':
         return {
-            'train': EllipseDataset(debug=args.debug, interface_rep=interface_representation, epsilon=args.epsilon),
-            'val': EllipseDataset(debug=args.debug, interface_rep=interface_representation, epsilon=args.epsilon),
+            'train': EllipseDataset(debug=args.debug,
+                                    interface_rep=interface_representation,
+                                    epsilon=args.epsilon,
+                                    vol_size=args.vol_size),
+            'val': EllipseDataset(debug=args.debug,
+                                  interface_rep=interface_representation,
+                                  epsilon=args.epsilon,
+                                  vol_size=args.vol_size),
         }
     #elif args.dataset_type == 'patch_ellipse':
     #    return {
@@ -188,7 +194,7 @@ def parse_args():
     parser.add_argument('--in-memory-dataset', action='store_true', help='Load dataset into memory')
     parser.add_argument('--interface-representation', type=str, default='sdf', help='Interface representation to use')
     parser.add_argument('--epsilon', type=float, default=None, help='Epsilon value for interface representation')
-    parser.add_argument('--patch-size', type=int, default=64, help='Size of patches for patch dataset')
+    parser.add_argument('--vol-size', type=int, default=64, help='Size of volumes / patches to use')
 
     # Training args
     parser.add_argument('--batch-size', type=int, default=1, help='Batch size for training')
