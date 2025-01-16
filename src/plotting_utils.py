@@ -14,34 +14,32 @@ from skimage.measure import regionprops
 from skimage.morphology import label
 
 
-def write_slice_plot(restart_path: Path, dx: float, outdir: Path, verbose: bool) -> None:
-    plt.clf()
-    restart_id = int(restart_path.stem.split("_")[3])
+def write_slice_plot(outpath: Path, data: np.ndarray, vrange=None):
+    """Write a plot of orthogonal slices through data
+    """
+    assert len(data.shape) == 3, "Expected 3D data"
 
-    if verbose:
-        print(f'Restart ID: {restart_id} | Restart Path: {restart_path}')
+    fig, axs = plt.subplots(1, 3, figsize=(12, 4), dpi=200)
 
-    xs = np.load(str(restart_path))
-    vol = xs[:, :, :, 4]
+    if vrange is None:
+        data_min, data_max = data.min(), data.max()
+    else:
+        data_min, data_max = vrange
 
-    fig, axs = plt.subplots(1, 3, figsize=(15, 5))
+    for j in range(3):
+        ax = axs[j]
+        ax.set_title(f'{j}-slice')
+        image = np.take(data, indices=data.shape[j] // 2, axis=j)
+        im = ax.imshow(image, cmap="gray", vmin=data_min, vmax=data_max)
+        fig.colorbar(im, ax=ax)
 
-    nx, ny, nz = vol.shape
-    im = axs[0].imshow(vol[nx // 2, :, :])
-    fig.colorbar(im, ax=axs[0])
+    fig.tight_layout()
 
-    im = axs[1].imshow(vol[:, ny // 2, :])
-    fig.colorbar(im, ax=axs[1])
-
-    im = axs[2].imshow(vol[:, :, nz // 2])
-    fig.colorbar(im, ax=axs[2])
-
-    plt.tight_layout()
-
-    outpath = outdir / Path(f"{restart_path.stem}_slices.png")
-    if verbose:
-        print(f"saving {outpath}")
-    plt.savefig(outpath)
+    if outpath is not None:
+        fig.savefig(outpath)
+        plt.close(fig)
+    else:
+        plt.show()
 
 
 def read_from_binary_3d(filestr: str, rho: float, dims: Tuple[int, int, int]) -> np.ndarray:

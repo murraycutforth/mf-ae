@@ -14,4 +14,6 @@ denoising-diffusion-pytorch
 accelerate
 ema-pytorch
 einops
+mesh2sdf
+trimesh
 -e file:///Users/murray/Projects/ConvAE3D

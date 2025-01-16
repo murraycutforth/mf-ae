@@ -1,5 +1,0 @@
-#BSUB -W 30
-#BSUB -G stanford
-#BSUB -q pdebug
-jsrun -n 1 -r 1 -a 1 -c 40 -g 4 ./run_ae_training_v5_debug.sh
-echo "Job complete at $(date)"

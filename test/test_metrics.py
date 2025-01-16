@@ -1,42 +1,56 @@
 import unittest
 import numpy as np
-from src.evaluation.eval_ae_error import hausdorff_distance
 
-class TestHausdorffDistance(unittest.TestCase):
+from conv_ae_3d.metrics import compute_tanh_heaviside_l1, compute_sdf_heaviside_l1
+from src.datasets.ellipse_dataset import generate_ellipsoid_sdf
+from src.interface_representation.interface_transformations import convert_from_sdf, InterfaceRepresentationType
 
-    def test_identical_grids(self):
-        gt_patch = np.ones((5, 5, 5))
-        pred_patch = np.ones((5, 5, 5))
-        self.assertEqual(hausdorff_distance(gt_patch, pred_patch), 0)
 
-    def test_single_point(self):
-        gt_patch = np.zeros((5, 5, 5))
-        pred_patch = np.zeros((5, 5, 5))
-        gt_patch[2, 2, 2] = 1
-        pred_patch[2, 2, 2] = 1
-        self.assertEqual(hausdorff_distance(gt_patch, pred_patch), 0)
+class TestSDFHeaviside(unittest.TestCase):
+    def setUp(self):
+        # Set up 3D sphere SDF
+        center = np.array([0.5, 0.5, 0.5])
+        radii = np.array([0.3, 0.3, 0.3])
+        N = 64
+        self.sdf = generate_ellipsoid_sdf(center, radii, N)
+        self.dx = 1.0 / N
 
-    def test_different_points(self):
-        gt_patch = np.zeros((5, 5, 5))
-        pred_patch = np.zeros((5, 5, 5))
-        gt_patch[0, 0, 0] = 1
-        pred_patch[4, 4, 4] = 1
-        self.assertEqual(hausdorff_distance(gt_patch, pred_patch), np.sqrt(3 * (4**2)))
+    def test_perfect_intersection(self):
+        sdf_copy = np.copy(self.sdf)
+        error = compute_sdf_heaviside_l1(sdf_copy, self.sdf)
+        self.assertAlmostEqual(error, 0.0, places=4)
 
-    def test_empty_and_non_empty(self):
-        gt_patch = np.zeros((5, 5, 5))
-        pred_patch = np.zeros((5, 5, 5))
-        pred_patch[2, 2, 2] = 1
-        self.assertIs(hausdorff_distance(gt_patch, pred_patch), np.nan)
+    def test_null_prediction(self):
+        sdf_pred = np.ones_like(self.sdf)
+        error = compute_sdf_heaviside_l1(sdf_pred, self.sdf)
+        sphere_vol = 4/3 * np.pi * 0.3**3
+        self.assertAlmostEqual(error * self.dx**3, sphere_vol, places=1)
 
-    def test_complex_case(self):
-        gt_patch = np.zeros((5, 5, 5))
-        pred_patch = np.zeros((5, 5, 5))
-        gt_patch[1, 1, 1] = 1
-        gt_patch[3, 3, 3] = 1
-        pred_patch[1, 1, 1] = 1
-        pred_patch[4, 4, 4] = 1
-        self.assertEqual(hausdorff_distance(gt_patch, pred_patch), np.sqrt(3 * (1**2)))
+
+class TestTanhHeaviside(unittest.TestCase):
+    def setUp(self):
+        # Set up 3D sphere SDF
+        center = np.array([0.5, 0.5, 0.5])
+        radii = np.array([0.3, 0.3, 0.3])
+        N = 64
+        self.sdf = generate_ellipsoid_sdf(center, radii, N)
+        self.dx = 1.0 / N
+        self.tanh = convert_from_sdf(self.sdf, InterfaceRepresentationType.TANH, self.dx)
+
+    def test_perfect_intersection(self):
+        tanh_copy = np.copy(self.tanh)
+        error = compute_tanh_heaviside_l1(self.tanh, tanh_copy)
+        self.assertAlmostEqual(error, 0.0, places=4)
+
+    def test_null_prediction(self):
+        tanh_pred = np.zeros_like(self.tanh)
+        error = compute_tanh_heaviside_l1(self.tanh, tanh_pred)
+        sphere_vol = 4/3 * np.pi * 0.3**3
+        self.assertAlmostEqual(error * self.dx**3, sphere_vol, places=1)
+
+
+
+
 
 if __name__ == '__main__':
     unittest.main()

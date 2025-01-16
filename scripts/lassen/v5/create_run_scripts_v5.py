@@ -11,13 +11,14 @@ VERSION = 5
 
 def main():
     search_args = {
-        'dim': [4, 8, 16, 32],
-        'interface-representation': ['heaviside', 'diffuse', 'sdf'],
+        'dim': [8, 16, 32],
+        'interface-representation': ['tanh', 'sdf'],
+        'epsilon': [1/128, 1/64, 1/32],
     }
 
     const_args = {
-        'dataset-type': 'patch_ellipse',
-        'patch-size': 64,
+        'dataset-type': 'ellipse',
+        'vol-size': 64,
         'num-dl-workers': 0,
         'batch-size': 1,
         'num-epochs': 30,
@@ -68,8 +69,14 @@ def create_param_str(i, combination):
 def create_run_script(i, run_name, args_dict):
     args_dict['run-name'] = run_name
 
+    # Apply arg-specific metric here
+    if args_dict['interface-representation'] == 'tanh':
+        args_dict['metrics'] = 'mse mae linf tanh_heaviside'
+    elif args_dict['interface-representation'] == 'sdf':
+        args_dict['metrics'] = 'mse mae linf sdf_heaviside'
+
     # Create .sh
-    with open(f"run_ae_training_v{VERSION}_{i}.sh", "w") as f:
+    with open(f"run_training_v{VERSION}_{i}.sh", "w") as f:
         f.write("source /usr/workspace/cutforth1/anaconda/bin/activate\n")
         f.write("export LD_LIBRARY_PATH=/opt/ibm/spectrumcomputing/lsf/10.1.0.10/linux3.10-glibc2.17-ppc64le-csm/lib\n")
         f.write("export PYTHONPATH=/usr/WS1/cutforth1/mf-ae\n")
@@ -84,14 +91,14 @@ def create_run_script(i, run_name, args_dict):
     run_time = 720
 
     # Create corresponding .bsub
-    with open(f"run_ae_training_v{VERSION}_{i}.bsub", "w") as f:
+    with open(f"run_training_v{VERSION}_{i}.bsub", "w") as f:
         f.write(f"#BSUB -W {run_time}\n")
         f.write("#BSUB -G stanford\n")
         f.write("#BSUB -q pbatch\n")
-        f.write(f"jsrun -n 1 -r 1 -a 1 -c 40 -g 4 ./run_ae_training_v{VERSION}_{i}.sh\n")
+        f.write(f"jsrun -n 1 -r 1 -a 1 -c 40 -g 4 ./run_training_v{VERSION}_{i}.sh\n")
         f.write(f'echo "Job complete at $(date)"\n')
 
-    os.chmod(f"run_ae_training_v{VERSION}_{i}.sh", 0o755)
+    os.chmod(f"run_training_v{VERSION}_{i}.sh", 0o755)
 
     print(f"Created run script for combination {i} with run time {run_time}")
 
@@ -105,7 +112,7 @@ def create_debug_script(args_dict):
         param_str += f" --{k} {v}"
 
     # Create .sh
-    with open(f"run_ae_training_v{VERSION}_debug.sh", "w") as f:
+    with open(f"run_training_v{VERSION}_debug.sh", "w") as f:
         f.write("source /usr/workspace/cutforth1/anaconda/bin/activate\n")
         f.write("export LD_LIBRARY_PATH=/opt/ibm/spectrumcomputing/lsf/10.1.0.10/linux3.10-glibc2.17-ppc64le-csm/lib\n")
         f.write("export PYTHONPATH=/usr/WS1/cutforth1/mf-ae\n")
@@ -113,15 +120,15 @@ def create_debug_script(args_dict):
         f.write(f"conda run -n genmodel_env accelerate launch ./src/main/main_train.py --debug {param_str}\n")
 
     # Create corresponding .bsub
-    with open(f"run_ae_training_v{VERSION}_debug.bsub", "w") as f:
+    with open(f"run_training_v{VERSION}_debug.bsub", "w") as f:
         f.write("#BSUB -W 30\n")
         f.write("#BSUB -G stanford\n")
         f.write("#BSUB -q pdebug\n")
-        f.write(f"jsrun -n 1 -r 1 -a 1 -c 40 -g 4 ./run_ae_training_v{VERSION}_debug.sh\n")
+        f.write(f"jsrun -n 1 -r 1 -a 1 -c 40 -g 4 ./run_training_v{VERSION}_debug.sh\n")
         f.write(f'echo "Job complete at $(date)"\n')
 
     # Permission of .sh
-    os.chmod(f"run_ae_training_v{VERSION}_debug.sh", 0o755)
+    os.chmod(f"run_training_v{VERSION}_debug.sh", 0o755)
 
     print(f"Created debug run script")
 
@@ -130,7 +137,7 @@ def create_run_all_script(num_runs: int):
     with open('run_all.sh', 'w') as f:
         f.write('#!/bin/bash\n')
         for i in range(num_runs):
-            f.write(f'bsub run_ae_training_v{VERSION}_{i}.bsub\n')
+            f.write(f'bsub run_training_v{VERSION}_{i}.bsub\n')
         f.write('echo "All jobs submitted"')
 
     os.chmod("run_all.sh", 0o755)
