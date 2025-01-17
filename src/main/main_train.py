@@ -11,7 +11,7 @@ from conv_ae_3d.metrics import MetricType
 
 from src.interface_representation.utils import InterfaceRepresentationType
 from src.paths import project_dir
-from src.datasets.phi_field_dataset import PhiDataset, PhiDatasetInMemory
+from src.datasets.phi_field_dataset import PhiDataset, PatchPhiDataset
 from src.datasets.ellipse_dataset import EllipseDataset
 
 logger = logging.getLogger(__name__)
@@ -124,32 +124,44 @@ def construct_datasets(args) -> dict:
     if args.dataset_type == 'ellipse':
         return {
             'train': EllipseDataset(debug=args.debug,
+                                    num_samples=1000,
                                     interface_rep=interface_representation,
                                     epsilon=args.epsilon,
                                     vol_size=args.vol_size),
             'val': EllipseDataset(debug=args.debug,
+                                  num_samples=100,
                                   interface_rep=interface_representation,
                                   epsilon=args.epsilon,
                                   vol_size=args.vol_size),
         }
-    #elif args.dataset_type == 'patch_ellipse':
-    #    return {
-    #        'train': PatchEllipseDataset(debug=args.debug, interface_rep=interface_representation, patch_size=args.patch_size),
-    #        'val': PatchEllipseDataset(debug=args.debug, interface_rep=interface_representation, patch_size=args.patch_size),
-    #    }
     elif args.dataset_type == 'phi_field_hit':
-        raise NotImplementedError
-
-        if not args.in_memory_dataset:
-            return {
-                'train': PhiDataset(data_dir=args.data_dir, split='train'),
-                'val': PhiDataset(data_dir=args.data_dir, split='val'),
-            }
-        else:
-            return {
-                'train': PhiDatasetInMemory(data_dir=args.data_dir, split='train'),
-                'val': PhiDatasetInMemory(data_dir=args.data_dir, split='val'),
-            }
+        return {
+            'train': PhiDataset(data_dir=args.data_dir,
+                                split='train',
+                                debug=args.debug,
+                                interface_rep=interface_representation,
+                                epsilon=args.epsilon),
+            'val': PhiDataset(data_dir=args.data_dir,
+                                split='val',
+                                debug=args.debug,
+                                interface_rep=interface_representation,
+                                epsilon=args.epsilon),
+        }
+    elif args.dataset_type == 'phi_field_hit_patched':
+        return {
+            'train': PatchPhiDataset(data_dir=args.data_dir,
+                                    split='train',
+                                    patch_size=args.vol_size,
+                                    debug=args.debug,
+                                    interface_rep=interface_representation,
+                                    epsilon=args.epsilon),
+            'val': PatchPhiDataset(data_dir=args.data_dir,
+                                    split='val',
+                                    patch_size=args.vol_size,
+                                    debug=args.debug,
+                                    interface_rep=interface_representation,
+                                    epsilon=args.epsilon),
+        }
     else:
         raise ValueError(f'Dataset type {args.dataset_type} not supported')
 
@@ -188,10 +200,9 @@ def parse_args():
 
     # Dataset args
     parser.add_argument('--dataset-type', type=str, default='ellipse', help='Type of dataset to use')
-    parser.add_argument('--data-dir', type=str, default=str(project_dir() / 'output' / '3d_x_subset_res128_pixelsize0.2_v1'), help='Path to data directory')
+    parser.add_argument('--data-dir', type=str, default=str(project_dir() / 'data'), help='Path to data directory')
     parser.add_argument('--num-dl-workers', type=int, default=0, help='Number of dataloader workers')
     parser.add_argument('--debug', action='store_true', help='Debug mode - run with just a few data samples')
-    parser.add_argument('--in-memory-dataset', action='store_true', help='Load dataset into memory')
     parser.add_argument('--interface-representation', type=str, default='sdf', help='Interface representation to use')
     parser.add_argument('--epsilon', type=float, default=None, help='Epsilon value for interface representation')
     parser.add_argument('--vol-size', type=int, default=64, help='Size of volumes / patches to use')

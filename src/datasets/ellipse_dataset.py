@@ -3,10 +3,8 @@ import logging
 import numpy as np
 import torch
 from torch.utils.data import Dataset
-from skimage.draw import ellipsoid
 from scipy.ndimage import distance_transform_edt
 
-from src.interface_representation.interface_representation import convert_arr_from_heaviside, convert_arr_to_heaviside
 from src.interface_representation.interface_transformations import convert_from_sdf
 from src.interface_representation.utils import InterfaceRepresentationType, check_sdf_consistency
 

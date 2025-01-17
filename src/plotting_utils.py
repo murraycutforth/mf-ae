@@ -100,7 +100,7 @@ def write_isosurface_plot(restart_path: Path, dx: float, outdir: Path, verbose: 
     write_isosurface_plot_from_arr(vol, dx, outpath, 0.5, verbose)
 
 
-def write_isosurface_plot_from_arr(vol: np.ndarray, dx: float, outname: Path, level: float, verbose: bool) -> None:
+def write_isosurface_plot_from_arr(vol: np.ndarray, N: float, outname: Path, level: float, verbose: bool) -> None:
     assert len(vol.shape) == 3
     assert vol.shape[0] == vol.shape[1] == vol.shape[2]
 
@@ -131,6 +131,36 @@ def write_isosurface_plot_from_arr(vol: np.ndarray, dx: float, outname: Path, le
     if verbose:
         print(f"saving {outname}")
     plt.savefig(outname)
+    plt.close(fig)
+
+
+def show_isosurface_plot_from_arr(vol: np.ndarray, N: float, level: float, verbose: bool) -> None:
+    assert len(vol.shape) == 3
+    assert vol.shape[0] == vol.shape[1] == vol.shape[2]
+
+    fig = plt.figure(figsize=(6, 6), dpi=200)
+    ax = fig.add_subplot(111, projection="3d")
+
+    ax.set_xlim(0, N)
+    ax.set_ylim(0, N)
+    ax.set_zlim(0, N)
+
+    verts, faces, normals, values = skimage.measure.marching_cubes(
+        vol, level, spacing=(1, 1, 1), allow_degenerate=False, method='lewiner'
+    )
+
+    while len(faces) > 500_000:
+        faces = faces[::2]
+
+    mesh = Poly3DCollection(verts[faces])
+    mesh.set_edgecolor("k")
+    mesh.set_linewidth(0.05)
+    mesh.set_alpha(0.9)
+    ax.add_collection3d(mesh)
+
+    plt.tight_layout()
+
+    plt.show()
     plt.close(fig)
 
 
