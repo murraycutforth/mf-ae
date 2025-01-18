@@ -6,14 +6,10 @@ import torch
 from torch.utils.data import Dataset
 from tqdm import tqdm
 
-from src.interface_representation.interface_transformations import convert_from_sdf, convert_from_tanh
+from src.interface_representation.interface_transformations import convert_from_tanh, diffuse_from_sdf
 from src.interface_representation.utils import InterfaceRepresentationType, check_sdf_consistency
 
 logger = logging.getLogger(__name__)
-
-
-# TODO: what is epsilon for this data? 1/256?
-# TODO: provide patch-based version of this dataset
 
 
 class PhiDataset(Dataset):
@@ -24,8 +20,8 @@ class PhiDataset(Dataset):
                 data_dir: str,
                 split: str,
                 debug: bool = False,
-                interface_rep: InterfaceRepresentationType = InterfaceRepresentationType.SDF,
-                epsilon: float = None):
+                interface_rep: InterfaceRepresentationType = InterfaceRepresentationType.TANH,
+                epsilon: float = 1/256):
         self.data_dir = Path(data_dir)
         self.interface_rep = interface_rep
         self.epsilon = epsilon
@@ -104,11 +100,11 @@ class PatchPhiDataset(PhiDataset):
                 split: str,
                 patch_size: int = 64,
                 debug: bool = False,
-                interface_rep: InterfaceRepresentationType = InterfaceRepresentationType.SDF,
-                epsilon: float = None):
+                interface_rep: InterfaceRepresentationType = InterfaceRepresentationType.TANH,
+                epsilon: float = 1/256):
         super().__init__(data_dir, split, debug, interface_rep, epsilon)
         self.patch_size = patch_size
-        self.num_patches_per_volume = (256 // self.patch_size)**3
+        self.num_patches_per_volume = (256 // self.patch_size)**3 // 2  # Overlap of 50%
         self.patch_data = []
         self.volume_ids = []
         np.random.seed(42)  # Ensure reproducibility in random patch selection
@@ -117,8 +113,17 @@ class PatchPhiDataset(PhiDataset):
             volume_id = i // self.num_patches_per_volume
             volume = self.data[volume_id]
             patch = self.extract_patch(volume)
-            self.patch_data.append(patch)
-            self.volume_ids.append(volume_id)
+
+            if self.interface_rep == InterfaceRepresentationType.SDF_APPROX or self.interface_rep == InterfaceRepresentationType.SDF_EXACT:
+                patch_has_structure = patch.min() < 0.0
+            elif self.interface_rep == InterfaceRepresentationType.TANH:
+                patch_has_structure = torch.sum(patch) > 1e-3
+            else:
+                raise ValueError(f'Interface representation {self.interface_rep} not supported')
+
+            if patch_has_structure:
+                self.patch_data.append(patch)
+                self.volume_ids.append(volume_id)
 
         assert len(self.filenames) * self.num_patches_per_volume == len(self.patch_data), 'Mismatch in number of patches'
         logger.info(f'Generated {len(self.patch_data)} patches of size {patch_size}^3 from {len(self.filenames)} volumes')

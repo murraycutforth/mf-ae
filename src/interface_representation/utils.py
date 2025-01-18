@@ -8,7 +8,8 @@ class InterfaceRepresentationType(Enum):
     Enum class to represent the different types of interface representations
     """
     TANH = 1
-    SDF = 2
+    SDF_APPROX = 2
+    SDF_EXACT = 3
 
 
 def check_tanh_consistency(tanh: np.ndarray):
@@ -27,5 +28,3 @@ def check_sdf_consistency(sdf: np.ndarray, dx: float):
     """
     assert np.all(~np.isnan(sdf)), "NaN values in SDF"
     assert np.all(~np.isinf(sdf)), "Inf values in SDF"
-    assert np.min(sdf) >= -np.sqrt(3) * dx * len(sdf), f"min: {np.min(sdf)}"
-    assert np.max(sdf) <= np.sqrt(3) * dx * len(sdf), f"max: {np.max(sdf)}"

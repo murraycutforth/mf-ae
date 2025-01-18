@@ -5,7 +5,7 @@ import torch
 from torch.utils.data import Dataset
 from scipy.ndimage import distance_transform_edt
 
-from src.interface_representation.interface_transformations import convert_from_sdf
+from src.interface_representation.interface_transformations import diffuse_from_sdf
 from src.interface_representation.utils import InterfaceRepresentationType, check_sdf_consistency
 
 logger = logging.getLogger(__name__)
@@ -70,7 +70,7 @@ class EllipseDataset(Dataset):
                  debug: bool = False,
                  num_samples: int = 100,
                  vol_size: int = 64,
-                 interface_rep: InterfaceRepresentationType = InterfaceRepresentationType.SDF,
+                 interface_rep: InterfaceRepresentationType = InterfaceRepresentationType.SDF_APPROX,
                  epsilon: float = None):
         super().__init__()
 
@@ -88,11 +88,7 @@ class EllipseDataset(Dataset):
 
         # Generate ellipse dataset and convert to desired interface representation
         self.data = np.array([generate_ellipsoid_sdf(center, radii, vol_size) for center, radii in zip(centers, radii)])
-        self.data = [convert_from_sdf(d, interface_rep, epsilon) for d in self.data]
-
-        # Data normalisation: minmax normalization to range of [0, 1]
-        self.compute_norm_params()
-        self.data = [self.normalise_array(d) for d in self.data]
+        self.data = [diffuse_from_sdf(d, epsilon) for d in self.data]
 
         # Add channel dim and convert to torch tensor
         self.data = [torch.tensor(d, dtype=torch.float32).unsqueeze(0) for d in self.data]
@@ -100,19 +96,10 @@ class EllipseDataset(Dataset):
         logger.info(f'Generated {num_samples} samples of ellipse data with interface representation {interface_rep}')
         logger.info(f'Each sample has shape {self.data[0].shape}')
 
-    def compute_norm_params(self):
-        # Compute params for minmax normalization to range of [0, 1]
-        self.min_val = np.min([np.min(d) for d in self.data])
-        self.max_val = np.max([np.max(d) for d in self.data])
-        self.range = self.max_val - self.min_val
-
     def normalise_array(self, arr):
-        # Intensity minmax normalization
-        return (arr - self.min_val) / self.range
+        return arr
 
     def unnormalise_array(self, arr):
-        # Undo intensity normalisation
-        arr = arr * self.range + self.min_val
         return arr
 
     def __len__(self):

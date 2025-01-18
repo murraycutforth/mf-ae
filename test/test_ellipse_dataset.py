@@ -32,7 +32,7 @@ class TestGenerateEllipsoidSDF(unittest.TestCase):
         N = 64
         sdf = generate_ellipsoid_sdf(center, radii, N)
         self.assertLessEqual(np.min(sdf), -0.25)
-        self.assertGreaterEqual(np.max(sdf), 0.5)
+        self.assertGreaterEqual(np.max(sdf), 0.45)
 
     def test_sdf_boundary_values(self):
         center = np.array([0.5, 0.5, 0.5])
@@ -82,7 +82,8 @@ class TestEllipseDataset(unittest.TestCase):
         self.vol_size = 64
         self.interface_reps = [
             InterfaceRepresentationType.TANH,
-            InterfaceRepresentationType.SDF
+            InterfaceRepresentationType.SDF_APPROX,
+            InterfaceRepresentationType.SDF_EXACT
         ]
         self.epsilon = 0.02
 

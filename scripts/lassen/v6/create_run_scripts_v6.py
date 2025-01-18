@@ -11,18 +11,19 @@ VERSION = 6
 
 def main():
     search_args = {
-        'dim': [8, 16, 32],
-        'interface-representation': ['tanh', 'sdf'],
+        'interface-representation': ['tanh', 'sdfapprox', 'sdfexact'],
         'epsilon': [1/128, 1/64, 1/32],
     }
 
     const_args = {
+        'dim': 32,
+        'data-dir': '/usr/workspace/cutforth1/hit_phi_data',
         'dataset-type': 'phi_field_hit_patched',
         'vol-size': 64,
         'num-dl-workers': 0,
         'batch-size': 1,
-        'num-epochs': 30,
-        'save-and-sample-every': 5,
+        'num-epochs': 100,
+        'save-and-sample-every': 25,
         'lr': 1e-4,
         'loss': 'l1',
         'dim-mults': '1 2 4 8 8',

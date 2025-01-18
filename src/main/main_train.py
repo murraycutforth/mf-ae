@@ -115,8 +115,10 @@ def construct_model(args, outdir=None):
 def construct_datasets(args) -> dict:
     if args.interface_representation == 'tanh':
         interface_representation = InterfaceRepresentationType.TANH
-    elif args.interface_representation == 'sdf':
-        interface_representation = InterfaceRepresentationType.SDF
+    elif args.interface_representation == 'sdfexact':
+        interface_representation = InterfaceRepresentationType.SDF_EXACT
+    elif args.interface_representation == 'sdfapprox':
+        interface_representation = InterfaceRepresentationType.SDF_APPROX
     else:
         raise ValueError(f'Interface representation {args.interface_representation} not supported')
 
@@ -203,8 +205,8 @@ def parse_args():
     parser.add_argument('--data-dir', type=str, default=str(project_dir() / 'data'), help='Path to data directory')
     parser.add_argument('--num-dl-workers', type=int, default=0, help='Number of dataloader workers')
     parser.add_argument('--debug', action='store_true', help='Debug mode - run with just a few data samples')
-    parser.add_argument('--interface-representation', type=str, default='sdf', help='Interface representation to use')
-    parser.add_argument('--epsilon', type=float, default=None, help='Epsilon value for interface representation')
+    parser.add_argument('--interface-representation', type=str, default='tanh', help='Interface representation to use')
+    parser.add_argument('--epsilon', type=float, default=1/256, help='Epsilon value for interface representation')
     parser.add_argument('--vol-size', type=int, default=64, help='Size of volumes / patches to use')
 
     # Training args

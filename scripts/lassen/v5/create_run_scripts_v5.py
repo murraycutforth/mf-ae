@@ -11,12 +11,12 @@ VERSION = 5
 
 def main():
     search_args = {
-        'dim': [8, 16, 32],
-        'interface-representation': ['tanh', 'sdf'],
+        'interface-representation': ['tanh', 'sdfexact', 'sdfapprox'],
         'epsilon': [1/128, 1/64, 1/32],
     }
 
     const_args = {
+        'dim': 32,
         'dataset-type': 'ellipse',
         'vol-size': 64,
         'num-dl-workers': 0,
