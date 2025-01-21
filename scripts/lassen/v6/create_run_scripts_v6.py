@@ -1,5 +1,6 @@
 import itertools
 import os
+import re
 
 VERSION = 6
 
@@ -11,19 +12,23 @@ VERSION = 6
 
 def main():
     search_args = {
-        'interface-representation': ['tanh', 'sdfapprox', 'sdfexact'],
-        'epsilon': [1/128, 1/64, 1/32],
+        'data-dir': ['/usr/workspace/cutforth1/hit_phi_data/approximate_sdf',
+                     '/usr/workspace/cutforth1/hit_phi_data/exact_sdf',
+                     '/usr/workspace/cutforth1/hit_phi_data/tanh_128_smoother',
+                     '/usr/workspace/cutforth1/hit_phi_data/tanh_512_sharper',
+                     '/usr/workspace/cutforth1/hit_phi_data/tanh_256',]
+        #'interface-representation': ['tanh', 'sdfapprox', 'sdfexact'],
+        #'epsilon': [1/128, 1/64, 1/32],
     }
 
     const_args = {
         'dim': 32,
-        'data-dir': '/usr/workspace/cutforth1/hit_phi_data',
         'dataset-type': 'phi_field_hit_patched',
         'vol-size': 64,
         'num-dl-workers': 0,
         'batch-size': 1,
-        'num-epochs': 100,
-        'save-and-sample-every': 25,
+        'num-epochs': 10,
+        'save-and-sample-every': 1,
         'lr': 1e-4,
         'loss': 'l1',
         'dim-mults': '1 2 4 8 8',
@@ -54,6 +59,8 @@ def main():
 
 def create_param_str(i, combination):
     param_str = "_".join([f"{key}{str(value)}" for key, value in combination.items()])
+    
+    param_str = param_str.replace("/usr/workspace/cutforth1/hit_phi_data/", "")
     param_str = param_str.replace("(", "")
     param_str = param_str.replace(")", "")
     param_str = param_str.replace(" ", "")
@@ -69,12 +76,6 @@ def create_param_str(i, combination):
 
 def create_run_script(i, run_name, args_dict):
     args_dict['run-name'] = run_name
-
-    # Apply arg-specific metric here
-    if args_dict['interface-representation'] == 'tanh':
-        args_dict['metrics'] = 'mse mae linf tanh_heaviside'
-    elif args_dict['interface-representation'] == 'sdf':
-        args_dict['metrics'] = 'mse mae linf sdf_heaviside'
 
     # Create .sh
     with open(f"run_training_v{VERSION}_{i}.sh", "w") as f:

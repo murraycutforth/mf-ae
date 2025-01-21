@@ -83,6 +83,7 @@ class EllipseDataset(Dataset):
         self.interface_rep = interface_rep
         self.epsilon = epsilon
 
+        np.random.seed(42)  # Ensure identical validation set between runs
         centers = np.random.rand(num_samples, 3)
         radii = np.random.uniform(0.2, 0.5, (num_samples, 3))
 

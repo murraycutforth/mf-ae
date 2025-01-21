@@ -17,6 +17,7 @@ def approximate_sdf_from_diffuse(phi: np.ndarray, epsilon: float):
     phi = phi.astype(np.float64)  # Necessary to prevent numerical round-off error
     delta = 1e-100  # Avoid log(0) in the next line
     psi = - epsilon * np.log((phi + delta) / ((1.0 - phi) + delta))
+    psi = psi.astype(np.float32)  # Convert back to float32
 
     assert not np.any(np.isinf(psi)), 'Infs found in SDF'
     assert not np.any(np.isnan(psi)), 'NaNs found in SDF'
