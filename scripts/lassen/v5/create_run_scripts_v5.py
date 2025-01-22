@@ -25,7 +25,7 @@ def main():
         'vol-size': 64,
         'num-dl-workers': 0,
         'batch-size': 1,
-        'num-epochs': 100,
+        'num-epochs': 75,
         'save-and-sample-every': 25,
         'lr': 1e-4,
         'loss': 'l1',
@@ -57,7 +57,7 @@ def main():
 
 def create_param_str(i, combination):
     param_str = "_".join([f"{key}{str(value)}" for key, value in combination.items()])
-    param_str = param_str.replace("/usr/workspace/cutforth1/hit_phi_data/", "")
+    param_str = param_str.replace("/usr/workspace/cutforth1/ellipsoid_data/", "")
     param_str = param_str.replace("(", "")
     param_str = param_str.replace(")", "")
     param_str = param_str.replace(" ", "")
