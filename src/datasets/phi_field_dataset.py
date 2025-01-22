@@ -96,7 +96,6 @@ class PatchPhiDataset(PhiDataset):
         self.patch_size = patch_size
         self.num_patches_per_volume = (256 // self.patch_size)**3 // 2  # Overlap of 50%
         self.patch_start_inds = []
-        self.patch_data = []
         self.volume_ids = []
 
         np.random.seed(42)  # Ensure reproducibility in random patch selection
@@ -108,8 +107,7 @@ class PatchPhiDataset(PhiDataset):
             volume_id = i // self.num_patches_per_volume
             self.volume_ids.append(volume_id)
 
-        assert len(self.filenames) * self.num_patches_per_volume == len(self.patch_data), 'Mismatch in number of patches'
-        logger.info(f'Generated {len(self.patch_data)} patches of size {patch_size}^3 from {len(self.filenames)} volumes')
+        logger.info(f'Generated {len(self.patch_start_inds)} patches of size {patch_size}^3 from {len(self.filenames)} volumes')
 
     def extract_patch(self, volume, patch_start_inds):
         patch_end_inds = [ind + self.patch_size for ind in patch_start_inds]
