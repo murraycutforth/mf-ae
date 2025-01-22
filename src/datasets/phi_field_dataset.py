@@ -122,4 +122,4 @@ class PatchPhiDataset(PhiDataset):
     def __getitem__(self, idx):
         volume = self.data[self.volume_ids[idx]]
         patch = self.extract_patch(volume, self.patch_start_inds[idx])
-        return patch
+        return patch.float()
