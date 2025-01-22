@@ -49,7 +49,7 @@ def exact_sdf_from_diffuse(phi: np.ndarray, epsilon: float):
     interior_far_sdf = distance_transform_edt(interior_mask, sampling=dx)
 
     psi[exterior_mask] = exterior_far_sdf[exterior_mask] + (edt_offset - 0.5 * dx)
-    psi[interior_mask] = -interior_far_sdf[interior_mask] - (edt_offset - 0.5 * dx)
+    psi[interior_mask] = -interior_far_sdf[interior_mask] - (edt_offset + 0.5 * dx)
 
     # Check there are no infs remaining
     assert not np.any(np.isinf(psi)), 'Infs found in SDF'

@@ -126,15 +126,11 @@ def construct_datasets(args) -> dict:
     if args.dataset_type == 'ellipse':
         return {
             'train': EllipseDataset(debug=args.debug,
-                                    num_samples=1000,
-                                    interface_rep=interface_representation,
-                                    epsilon=args.epsilon,
-                                    vol_size=args.vol_size),
+                                    data_dir=args.data_dir,
+                                    split='train'),
             'val': EllipseDataset(debug=args.debug,
-                                  num_samples=100,
-                                  interface_rep=interface_representation,
-                                  epsilon=args.epsilon,
-                                  vol_size=args.vol_size),
+                                    data_dir=args.data_dir,
+                                    split='val')
         }
     elif args.dataset_type == 'phi_field_hit':
         return {
@@ -202,7 +198,7 @@ def parse_args():
 
     # Dataset args
     parser.add_argument('--dataset-type', type=str, default='ellipse', help='Type of dataset to use')
-    parser.add_argument('--data-dir', type=str, default=str(project_dir() / 'data'), help='Path to data directory')
+    parser.add_argument('--data-dir', type=str, default='/Users/murray/Projects/multphase_flow_encoder/multiphase_flow_encoder/src/preprocessing/data/ellipsoids/tanh', help='Path to data directory')
     parser.add_argument('--num-dl-workers', type=int, default=0, help='Number of dataloader workers')
     parser.add_argument('--debug', action='store_true', help='Debug mode - run with just a few data samples')
     parser.add_argument('--interface-representation', type=str, default='tanh', help='Interface representation to use')

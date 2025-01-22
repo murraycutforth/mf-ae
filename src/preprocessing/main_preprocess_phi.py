@@ -13,7 +13,7 @@ from tqdm import tqdm
 from src.interface_representation.interface_transformations import approximate_sdf_from_diffuse, diffuse_from_sdf, \
     exact_sdf_from_diffuse
 
-data_dir = Path('/Volumes/My Passport for Mac/Multiphase-droplet-evolution')
+data_dir = Path('/Volumes/My Passport for Mac/Multiphase-droplet-evolution/tanh_256')
 
 
 def plot_many_z_slices(phi, fname):
@@ -73,7 +73,7 @@ def build_intensity_histogram(filenames):
 
 
 def convert_to_approximate_sdf(filenames):
-    outdir = data_dir / 'approximate_sdf'
+    outdir = data_dir.parent / 'approximate_sdf'
     outdir.mkdir(exist_ok=True)
 
     for filename in tqdm(filenames):
@@ -91,7 +91,7 @@ def convert_to_approximate_sdf(filenames):
 
 
 def convert_to_exact_sdf(filenames):
-    outdir = data_dir / 'exact_sdf'
+    outdir = data_dir.parent / 'exact_sdf'
     outdir.mkdir(exist_ok=True)
 
     for filename in tqdm(filenames):
@@ -109,7 +109,7 @@ def convert_to_exact_sdf(filenames):
 
 
 def convert_to_tanh_smoother(filenames):
-    outdir = data_dir / 'tanh_128_smoother'
+    outdir = data_dir.parent / 'tanh_128_smoother'
     outdir.mkdir(exist_ok=True)
 
     for filename in tqdm(filenames):
@@ -128,7 +128,7 @@ def convert_to_tanh_smoother(filenames):
 
 
 def convert_to_tanh_sharper(filenames):
-    outdir = data_dir / 'tanh_512_sharper'
+    outdir = data_dir.parent / 'tanh_512_sharper'
     outdir.mkdir(exist_ok=True)
 
     for filename in tqdm(filenames):
@@ -151,11 +151,11 @@ def main():
 
     print(f'Found {len(filenames)} files to convert')
 
-    build_intensity_histogram(filenames)
-    #convert_to_approximate_sdf(filenames)
-    #convert_to_tanh_smoother(filenames)
-    #convert_to_tanh_sharper(filenames)
-    #convert_to_exact_sdf(filenames)
+    #build_intensity_histogram(filenames)
+    convert_to_exact_sdf(filenames)
+    convert_to_approximate_sdf(filenames)
+    convert_to_tanh_smoother(filenames)
+    convert_to_tanh_sharper(filenames)
 
 
 

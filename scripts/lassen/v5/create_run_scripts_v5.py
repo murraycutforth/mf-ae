@@ -11,8 +11,12 @@ VERSION = 5
 
 def main():
     search_args = {
-        'interface-representation': ['tanh', 'sdfexact', 'sdfapprox'],
-        'epsilon': [1/128, 1/64, 1/32],
+        'data-dir': ['/usr/workspace/cutforth1/ellipsoid_data/tanh',
+                     '/usr/workspace/cutforth1/ellipsoid_data/exact_sdf',
+                     '/usr/workspace/cutforth1/ellipsoid_data/approx_sdf',
+                     '/usr/workspace/cutforth1/ellipsoid_data/tanh_smooth',
+                     '/usr/workspace/cutforth1/ellipsoid_data/tanh_sharp'
+                     ],
     }
 
     const_args = {
@@ -53,6 +57,7 @@ def main():
 
 def create_param_str(i, combination):
     param_str = "_".join([f"{key}{str(value)}" for key, value in combination.items()])
+    param_str = param_str.replace("/usr/workspace/cutforth1/hit_phi_data/", "")
     param_str = param_str.replace("(", "")
     param_str = param_str.replace(")", "")
     param_str = param_str.replace(" ", "")
@@ -68,12 +73,6 @@ def create_param_str(i, combination):
 
 def create_run_script(i, run_name, args_dict):
     args_dict['run-name'] = run_name
-
-    # Apply arg-specific metric here
-    if args_dict['interface-representation'] == 'tanh':
-        args_dict['metrics'] = 'mse mae linf tanh_heaviside'
-    elif args_dict['interface-representation'] == 'sdf':
-        args_dict['metrics'] = 'mse mae linf sdf_heaviside'
 
     # Create .sh
     with open(f"run_training_v{VERSION}_{i}.sh", "w") as f:
