@@ -61,12 +61,9 @@ class PhiDataset(Dataset):
         phi = data['phi']
         assert phi.shape == (256, 256, 256), f'Unexpected shape: {phi.shape}'
 
-        # Load data, add channel dim, convert to pytorch
-        self.data = np.array([np.load(f)['phi'] for f in self.filenames])
-
         # Load data and convert to desired interface representation
-        self.data = np.array([np.load(f)['phi'] for f in self.filenames])
-        self.data = [torch.tensor(d, dtype=torch.float32).unsqueeze(0) for d in self.data]
+        self.data = np.array([np.load(f)['phi'].astype(np.float16) for f in self.filenames])
+        self.data = [torch.tensor(d, dtype=torch.float16).unsqueeze(0) for d in self.data]
 
         logger.info(f'Generated {len(self.data)} samples of HIT data with interface representation {interface_rep}')
         logger.info(f'Each sample has shape {self.data[0].shape}')
@@ -81,7 +78,7 @@ class PhiDataset(Dataset):
         return len(self.data)
 
     def __getitem__(self, idx):
-        return self.data[idx]
+        return self.data[idx].float()
 
 
 class PatchPhiDataset(PhiDataset):
