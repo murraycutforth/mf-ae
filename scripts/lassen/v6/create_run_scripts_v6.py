@@ -28,7 +28,7 @@ def main():
         'num-dl-workers': 0,
         'batch-size': 1,
         'num-epochs': 10,
-        'save-and-sample-every': 1,
+        'save-and-sample-every': 2,
         'lr': 1e-4,
         'loss': 'l1',
         'dim-mults': '1 2 4 8 8',

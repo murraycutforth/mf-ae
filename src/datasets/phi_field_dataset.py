@@ -95,31 +95,23 @@ class PatchPhiDataset(PhiDataset):
         super().__init__(data_dir, split, debug, interface_rep, epsilon)
         self.patch_size = patch_size
         self.num_patches_per_volume = (256 // self.patch_size)**3 // 2  # Overlap of 50%
+        self.patch_start_inds = []
         self.patch_data = []
         self.volume_ids = []
+
         np.random.seed(42)  # Ensure reproducibility in random patch selection
 
         for i in range(len(self.filenames) * self.num_patches_per_volume):
+            patch_start_inds = np.random.randint(0, 256 - self.patch_size, 3)
+            self.patch_start_inds.append(patch_start_inds)
+
             volume_id = i // self.num_patches_per_volume
-            volume = self.data[volume_id]
-            patch = self.extract_patch(volume)
-
-            if self.interface_rep == InterfaceRepresentationType.SDF_APPROX or self.interface_rep == InterfaceRepresentationType.SDF_EXACT:
-                patch_has_structure = patch.min() < 0.0
-            elif self.interface_rep == InterfaceRepresentationType.TANH:
-                patch_has_structure = torch.sum(patch) > 1e-3
-            else:
-                raise ValueError(f'Interface representation {self.interface_rep} not supported')
-
-            if patch_has_structure:
-                self.patch_data.append(patch)
-                self.volume_ids.append(volume_id)
+            self.volume_ids.append(volume_id)
 
         assert len(self.filenames) * self.num_patches_per_volume == len(self.patch_data), 'Mismatch in number of patches'
         logger.info(f'Generated {len(self.patch_data)} patches of size {patch_size}^3 from {len(self.filenames)} volumes')
 
-    def extract_patch(self, volume):
-        patch_start_inds = np.random.randint(0, 256 - self.patch_size, 3)
+    def extract_patch(self, volume, patch_start_inds):
         patch_end_inds = [ind + self.patch_size for ind in patch_start_inds]
         return volume[:,
                 patch_start_inds[0]:patch_end_inds[0],
@@ -127,7 +119,9 @@ class PatchPhiDataset(PhiDataset):
                 patch_start_inds[2]:patch_end_inds[2]]
 
     def __len__(self):
-        return len(self.patch_data)
+        return len(self.patch_start_inds)
 
     def __getitem__(self, idx):
-        return self.patch_data[idx]
+        volume = self.data[self.volume_ids[idx]]
+        patch = self.extract_patch(volume, self.patch_start_inds[idx])
+        return patch
