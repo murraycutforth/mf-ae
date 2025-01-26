@@ -97,6 +97,8 @@ def main():
 
 def construct_model(args, outdir=None):
 
+    torch.manual_seed(args.seed)
+
     model = ConvAutoencoderBaseline(
         dim=args.dim,
         dim_mults=args.dim_mults,
@@ -206,6 +208,7 @@ def parse_args():
     parser.add_argument('--vol-size', type=int, default=64, help='Size of volumes / patches to use')
 
     # Training args
+    parser.add_argument('--seed', type=int, default=42, help='Random seed for reproducibility')
     parser.add_argument('--batch-size', type=int, default=1, help='Batch size for training')
     parser.add_argument('--num-epochs', type=int, default=10, help='Number of epochs to train for')
     parser.add_argument('--save-and-sample-every', type=int, default=None, help='Save and sample every n epochs')

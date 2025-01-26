@@ -3,20 +3,16 @@ import os
 
 VERSION = 5
 
-# Dataset: ellipse
-# Search space: dim, interface-representation
-# dim: [4, 8, 16]
-# Interface representation: [heaviside, diffuse, sdf]
-
 
 def main():
     search_args = {
         'data-dir': ['/usr/workspace/cutforth1/ellipsoid_data/tanh',
-                     '/usr/workspace/cutforth1/ellipsoid_data/exact_sdf',
-                     '/usr/workspace/cutforth1/ellipsoid_data/approx_sdf',
-                     '/usr/workspace/cutforth1/ellipsoid_data/tanh_smooth',
-                     '/usr/workspace/cutforth1/ellipsoid_data/tanh_sharp'
+                     '/usr/workspace/cutforth1/ellipsoid_data/exactsdf',
+                     '/usr/workspace/cutforth1/ellipsoid_data/approxsdf',
+                     '/usr/workspace/cutforth1/ellipsoid_data/tanhsmooth',
+                     '/usr/workspace/cutforth1/ellipsoid_data/tanhsharp'
                      ],
+        'seed': [0, 42, 8]
     }
 
     const_args = {
@@ -26,7 +22,7 @@ def main():
         'num-dl-workers': 0,
         'batch-size': 1,
         'num-epochs': 75,
-        'save-and-sample-every': 25,
+        'save-and-sample-every': 75,
         'lr': 1e-4,
         'loss': 'l1',
         'dim-mults': '1 2 4 8 8',

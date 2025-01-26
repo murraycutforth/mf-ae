@@ -171,5 +171,68 @@ class TestEllipseDataset(unittest.TestCase):
                     #write_isosurface_plot_from_arr(data_heaviside, dx=dataset.vol_size, outname=outdir / f'data_{i}_isosurface.png', level=0.5, verbose=False)
 
 
+import matplotlib.pyplot as plt
+from src.datasets.ellipse_dataset import generate_ellipsoid_sdf_from_point_cloud, generate_ellipsoid_surface_point_cloud
+
+
+class TestEllipsoidPointCloud(unittest.TestCase):
+
+        def setUp(self):
+            self.center = np.array([0.5, 0.5, 0.5])
+            self.radii = np.array([0.3, 0.2, 0.1])
+            self.N_phi = 100
+            self.N_theta = 100
+
+        def test_point_cloud_shapes(self):
+            pc = generate_ellipsoid_surface_point_cloud(self.center, self.radii, self.N_phi, self.N_theta)
+            self.assertEqual(pc.shape, (self.N_phi * self.N_theta, 3))
+
+        def test_point_cloud_min_max_values(self):
+            pc = generate_ellipsoid_surface_point_cloud(self.center, self.radii, self.N_phi, self.N_theta)
+            self.assertGreaterEqual(np.min(pc), 0.0)
+            self.assertLessEqual(np.max(pc), 1.0)
+
+        def test_plot_point_cloud(self):
+            pc = generate_ellipsoid_surface_point_cloud(self.center, self.radii, self.N_phi, self.N_theta)
+            fig = plt.figure(figsize=(10, 10))
+            ax = fig.add_subplot(111, projection='3d')
+            ax.scatter(pc[:, 0], pc[:, 1], pc[:, 2], s=1)
+            ax.set_title('Ellipsoid Surface Point Cloud')
+            plt.show()
+
+
+class TestEllipsoidSDFFromPointCloud(unittest.TestCase):
+
+    def setUp(self):
+        self.center = np.array([0.5, 0.5, 0.5])
+        self.radii = np.array([0.3, 0.2, 0.1])
+        self.N_phi = 100
+        self.N_theta = 100
+        self.N_vol = 64
+
+        self.sdf = generate_ellipsoid_sdf_from_point_cloud(self.center, self.radii, self.N_phi, self.N_theta, self.N_vol)
+
+    def test_sdf_min_max_vals(self):
+        self.assertGreaterEqual(np.min(self.sdf), -0.1)
+        self.assertLessEqual(np.max(self.sdf), 1.0)
+
+    def test_sdf_visual_check(self):
+        sdf = self.sdf
+
+        # Plot slices of the SDF
+        fig, axs = plt.subplots(1, 3, figsize=(15, 5))
+        im = axs[0].imshow(sdf[self.N_vol // 2, :, :], cmap='viridis')
+        fig.colorbar(im, ax=axs[0])
+        axs[0].set_title('SDF Slice (XY plane)')
+        im = axs[1].imshow(sdf[:, self.N_vol // 2, :], cmap='viridis')
+        fig.colorbar(im, ax=axs[1])
+        axs[1].set_title('SDF Slice (XZ plane)')
+        im = axs[2].imshow(sdf[:, :, self.N_vol // 2], cmap='viridis')
+        fig.colorbar(im, ax=axs[2])
+        axs[2].set_title('SDF Slice (YZ plane)')
+        plt.show()
+        plt.close()
+
+
 if __name__ == '__main__':
     unittest.main()

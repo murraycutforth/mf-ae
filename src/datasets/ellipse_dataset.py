@@ -5,7 +5,9 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset
 from scipy.ndimage import distance_transform_edt
+from scipy.spatial.distance import cdist
 
+from src.datasets.utils import parallel_unsigned_distances
 from src.interface_representation.interface_transformations import diffuse_from_sdf
 from src.interface_representation.utils import InterfaceRepresentationType, check_sdf_consistency
 
@@ -48,6 +50,8 @@ def generate_ellipsoid_sdf(center: np.ndarray, radii: np.ndarray, N: int):
     assert np.all(radii > 0) and np.all(radii <= 1), f'Invalid radii: {radii}'
     assert np.all(center >= 0) and np.all(center <= 1), f'Invalid center: {center}'
 
+    # Generate a set of points distributed
+
     vol_frac = generate_ellipsoid_vol_fracs(center, radii, N)
     interior_mask = vol_frac > 0.5
     exterior_mask = vol_frac <= 0.5
@@ -61,6 +65,64 @@ def generate_ellipsoid_sdf(center: np.ndarray, radii: np.ndarray, N: int):
     check_sdf_consistency(sdf, dx)
 
     return sdf
+
+
+def generate_ellipsoid_surface_point_cloud(center: np.ndarray, radii: np.ndarray, N_phi: int, N_theta: int):
+    """Generate a point cloud representation of the surface of an ellipsoid.
+    Using spherical polar coordinates, define r=r(theta, phi) as the ellipsoid surface.
+    """
+    assert center.shape == (3,), f'Unexpected shape: {center.shape}'
+    assert radii.shape == (3,), f'Unexpected shape: {radii.shape}'
+    assert np.all(radii > 0) and np.all(radii <= 1), f'Invalid radii: {radii}'
+    assert np.all(center >= 0) and np.all(center <= 1), f'Invalid center: {center}'
+    assert N_phi > 0, f'Invalid discretisation of longitudinal (azimuthal) angle: {N_phi}'
+    assert N_theta > 0, f'Invalid discretisation of latitudinal (polar) angle: {N_theta}'
+
+    # Generate spherical coordinates
+    phi = np.linspace(0, 2 * np.pi, N_phi)
+    theta = np.linspace(0, np.pi, N_theta)
+    phi, theta = np.meshgrid(phi, theta)
+
+    # Parametric equations for the ellipsoid surface
+    X = radii[0] * np.sin(theta) * np.cos(phi) + center[0]
+    Y = radii[1] * np.sin(phi) * np.sin(theta) + center[1]
+    Z = radii[2] * np.cos(theta) + center[2]
+
+    # Flatten the arrays to create a point cloud
+    points = np.vstack((X.ravel(), Y.ravel(), Z.ravel())).T
+
+    return points
+
+
+def generate_ellipsoid_sdf_from_point_cloud(center: np.ndarray, radii: np.ndarray, N_phi: int, N_theta: int, N_vol: int):
+    xs = np.linspace(0, 1, N_vol)
+    ys = np.linspace(0, 1, N_vol)
+    zs = np.linspace(0, 1, N_vol)
+
+    X, Y, Z = np.meshgrid(xs, ys, zs, indexing='ij')
+    cell_center_coords = np.stack([X, Y, Z], axis=-1)  # Shape (N_vol, N_vol, N_vol, 3)
+    cell_center_coords = cell_center_coords.reshape(-1, 3)
+
+    pc = generate_ellipsoid_surface_point_cloud(center, radii, N_phi, N_theta)  # Shape (N_points, 3)
+    ellipsoid_interior_mask = generate_ellipsoid_vol_fracs(center, radii, N_vol).astype(bool)  # Shape (N_vol, N_vol, N_vol)
+
+    # Compute the min distance between each cell center and the ellipsoid surface point cloud
+    #pairwise_dist = cdist(cell_center_coords.astype(np.float32), pc.astype(np.float32))  # Shape (N_vol**3, N_points)
+    #unsigned_distances = np.min(pairwise_dist, axis=1)
+    unsigned_distances = parallel_unsigned_distances(cell_center_coords, pc, 10)
+
+    assert len(unsigned_distances) == N_vol**3, f'Unexpected length: {len(unsigned_distances)}'
+
+    unsigned_distances = unsigned_distances.reshape((N_vol, N_vol, N_vol))
+
+    # Flip sign of interior points
+    sdf = unsigned_distances
+    sdf[ellipsoid_interior_mask] *= -1
+
+    return sdf
+
+
+
 
 
 class EllipseDataset(Dataset):
