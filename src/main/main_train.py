@@ -13,6 +13,7 @@ from src.interface_representation.utils import InterfaceRepresentationType
 from src.paths import project_dir
 from src.datasets.phi_field_dataset import PhiDataset, PatchPhiDataset
 from src.datasets.ellipse_dataset import EllipseDataset
+from src.datasets.spheres_dataset import SpheresDataset
 
 logger = logging.getLogger(__name__)
 
@@ -131,6 +132,15 @@ def construct_datasets(args) -> dict:
                                     data_dir=args.data_dir,
                                     split='train'),
             'val': EllipseDataset(debug=args.debug,
+                                    data_dir=args.data_dir,
+                                    split='val')
+        }
+    elif args.dataset_type == 'spheres':
+        return {
+            'train': SpheresDataset(debug=args.debug,
+                                    data_dir=args.data_dir,
+                                    split='train'),
+            'val': SpheresDataset(debug=args.debug,
                                     data_dir=args.data_dir,
                                     split='val')
         }

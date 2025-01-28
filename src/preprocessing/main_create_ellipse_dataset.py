@@ -14,15 +14,15 @@ VOL_SIZE = 64
 OUTDIR = Path('data/ellipsoids')
 
 def main():
-    outdir_exact = OUTDIR / 'exact_sdf'
+    outdir_exact = OUTDIR / 'exactsdf'
     outdir_exact.mkdir(exist_ok=True, parents=True)
-    outdir_approx = OUTDIR / 'approx_sdf'
+    outdir_approx = OUTDIR / 'approxsdf'
     outdir_approx.mkdir(exist_ok=True)
     outdir_tanh = OUTDIR / 'tanh'
     outdir_tanh.mkdir(exist_ok=True)
-    outdir_tanh_smooth = OUTDIR / 'tanh_smooth'
+    outdir_tanh_smooth = OUTDIR / 'tanhsmooth'
     outdir_tanh_smooth.mkdir(exist_ok=True)
-    outdir_tanh_sharp = OUTDIR / 'tanh_sharp'
+    outdir_tanh_sharp = OUTDIR / 'tanhsharp'
     outdir_tanh_sharp.mkdir(exist_ok=True)
 
 

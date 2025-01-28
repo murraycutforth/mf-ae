@@ -3,8 +3,7 @@ import warnings
 import numpy as np
 from scipy.ndimage import distance_transform_edt
 
-from src.interface_representation.utils import InterfaceRepresentationType
-
+from src.interface_representation.interface_types import InterfaceType
 
 def approximate_sdf_from_diffuse(phi: np.ndarray, epsilon: float):
     """Approximate formula to convert diffuse interface to signed distance function, invalid far away from
@@ -67,20 +66,46 @@ def diffuse_from_sdf(sdf: np.ndarray, epsilon: float):
     return phi
 
 
-def convert_from_tanh(phi: np.ndarray, representation_type: InterfaceRepresentationType, current_epsilon: float, desired_epsilon: float):
+def heaviside_from_sdf(sdf: np.ndarray):
     """
-    Convert the interface representation from tanh to another representation type
+    Convert a signed distance function to a Heaviside representation.
     """
-    sdf = approximate_sdf_from_diffuse(phi, current_epsilon)
+    return (sdf < 0).astype(np.float32)
 
-    if representation_type == InterfaceRepresentationType.TANH:
-        if desired_epsilon == current_epsilon:
-            return phi
-        else:
-            return diffuse_from_sdf(sdf, desired_epsilon)
-    elif representation_type == InterfaceRepresentationType.SDF_APPROX:
+
+def convert_from_exact_sdf(sdf: np.ndarray, interface_type: InterfaceType, epsilon: float=None):
+    """
+    Convert the interface representation from exact SDF to another representation type
+    """
+    if interface_type == InterfaceType.TANH_EPSILON:
+        return diffuse_from_sdf(sdf, epsilon)
+    elif interface_type == InterfaceType.HEAVISIDE:
+        return heaviside_from_sdf(sdf)
+    elif interface_type == InterfaceType.SIGNED_DISTANCE_EXACT:
         return sdf
-    elif representation_type == InterfaceRepresentationType.SDF_EXACT:
-        return exact_sdf_from_diffuse(phi, current_epsilon)
+    elif interface_type == InterfaceType.SIGNED_DISTANCE_APPROXIMATE:
+        epsilon = 1 / len(sdf)
+        tanh = diffuse_from_sdf(sdf, epsilon)
+        sdf_approx = approximate_sdf_from_diffuse(tanh, epsilon)
+        return sdf_approx
     else:
-        raise ValueError(f'Unsupported representation type: {representation_type}')
+        raise ValueError(f'Unsupported interface type: {interface_type}')
+
+
+#def convert_from_tanh(phi: np.ndarray, representation_type: InterfaceRepresentationType, current_epsilon: float, desired_epsilon: float):
+#    """
+#    Convert the interface representation from tanh to another representation type
+#    """
+#    sdf = approximate_sdf_from_diffuse(phi, current_epsilon)
+#
+#    if representation_type == InterfaceRepresentationType.TANH:
+#        if desired_epsilon == current_epsilon:
+#            return phi
+#        else:
+#            return diffuse_from_sdf(sdf, desired_epsilon)
+#    elif representation_type == InterfaceRepresentationType.SDF_APPROX:
+#        return sdf
+#    elif representation_type == InterfaceRepresentationType.SDF_EXACT:
+#        return exact_sdf_from_diffuse(phi, current_epsilon)
+#    else:
+#        raise ValueError(f'Unsupported representation type: {representation_type}')
