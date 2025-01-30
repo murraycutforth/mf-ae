@@ -1,26 +1,25 @@
 import itertools
 import os
 
-VERSION = 15
+VERSION = 18
 
 
 def main():
     search_args = {
-        'data-dir': ['/usr/WS1/cutforth1/data-mf-ae/v5_ellipsoids/SIGNED_DISTANCE_EXACT',
-                     '/usr/WS1/cutforth1/data-mf-ae/v5_ellipsoids/SIGNED_DISTANCE_APPROXIMATE',
-                     '/usr/WS1/cutforth1/data-mf-ae/v5_ellipsoids/HEAVISIDE',
-                     '/usr/WS1/cutforth1/data-mf-ae/v5_ellipsoids/TANH_EPSILON0.007825',
-                        '/usr/WS1/cutforth1/data-mf-ae/v5_ellipsoids/TANH_EPSILON0.01565',
-                        '/usr/WS1/cutforth1/data-mf-ae/v5_ellipsoids/TANH_EPSILON0.03125',
-                        '/usr/WS1/cutforth1/data-mf-ae/v5_ellipsoids/TANH_EPSILON0.0625',
+        'data-dir': ['/usr/WS1/cutforth1/data-mf-ae/v8_spheres/SIGNED_DISTANCE_EXACT',
+                     '/usr/WS1/cutforth1/data-mf-ae/v8_spheres/SIGNED_DISTANCE_APPROXIMATE',
+                     '/usr/WS1/cutforth1/data-mf-ae/v8_spheres/HEAVISIDE',
+                     '/usr/WS1/cutforth1/data-mf-ae/v8_spheres/TANH_EPSILON0.007825',
+                        '/usr/WS1/cutforth1/data-mf-ae/v8_spheres/TANH_EPSILON0.01565',
+                        '/usr/WS1/cutforth1/data-mf-ae/v8_spheres/TANH_EPSILON0.03125',
+                        '/usr/WS1/cutforth1/data-mf-ae/v8_spheres/TANH_EPSILON0.0625',
                      ],
         'seed': [0]
     }
 
     const_args = {
         'dim': 32,
-        'dataset-type': 'ellipse',
-        'vol-size': 64,
+        'dataset-type': 'volumetric',
         'num-dl-workers': 0,
         'batch-size': 1,
         'num-epochs': 100,

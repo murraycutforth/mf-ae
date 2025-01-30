@@ -19,7 +19,7 @@ def main():
 
     const_args = {
         'dim': 32,
-        'dataset-type': 'spheres',
+        'dataset-type': 'v7_spheres',
         'vol-size': 64,
         'num-dl-workers': 0,
         'batch-size': 1,

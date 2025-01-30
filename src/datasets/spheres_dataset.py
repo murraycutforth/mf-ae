@@ -15,8 +15,10 @@ logger = logging.getLogger(__name__)
 
 
 class SpheresDataset(Dataset):
-    """Dataset class for synthetic sphere data, parameterized by center, number of spheres, and radius.
+    """Dataset class for synthetic sphere data, parameterized by center, number of v7_spheres, and radius.
     The interface representation (diffuse/sdf) is specified on construction.
+
+    TODO: refactor to create single "stored volume" dataset type?
     """
     def __init__(self,
                  data_dir: str,

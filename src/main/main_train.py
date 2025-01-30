@@ -9,11 +9,11 @@ from conv_ae_3d.models.baseline_model import ConvAutoencoderBaseline
 from conv_ae_3d.trainer_ae import MyAETrainer
 from conv_ae_3d.metrics import MetricType
 
-from src.interface_representation.utils import InterfaceRepresentationType
 from src.paths import project_dir
 from src.datasets.phi_field_dataset import PhiDataset, PatchPhiDataset
 from src.datasets.ellipse_dataset import EllipseDataset
 from src.datasets.spheres_dataset import SpheresDataset
+from src.datasets.volumetric_datasets import VolumeDatasetInMemory, PatchVolumeDatasetInMemory
 
 logger = logging.getLogger(__name__)
 
@@ -116,61 +116,27 @@ def construct_model(args, outdir=None):
 
 
 def construct_datasets(args) -> dict:
-    if args.interface_representation == 'tanh':
-        interface_representation = InterfaceRepresentationType.TANH
-    elif args.interface_representation == 'sdfexact':
-        interface_representation = InterfaceRepresentationType.SDF_EXACT
-    elif args.interface_representation == 'sdfapprox':
-        interface_representation = InterfaceRepresentationType.SDF_APPROX
-    else:
-        raise ValueError(f'Interface representation {args.interface_representation} not supported')
-
-
-    if args.dataset_type == 'ellipse':
+    if args.dataset_type == 'volumetric':
         return {
-            'train': EllipseDataset(debug=args.debug,
-                                    data_dir=args.data_dir,
-                                    split='train'),
-            'val': EllipseDataset(debug=args.debug,
-                                    data_dir=args.data_dir,
-                                    split='val')
+            'train': VolumeDatasetInMemory(debug=args.debug,
+                                           data_dir=args.data_dir,
+                                           split='train',
+                                           ),
+            'val': VolumeDatasetInMemory(debug=args.debug,
+                                         data_dir=args.data_dir,
+                                         split='val',
+                                         )
         }
-    elif args.dataset_type == 'spheres':
+    elif args.dataset_type == 'volumetric_patched':
         return {
-            'train': SpheresDataset(debug=args.debug,
-                                    data_dir=args.data_dir,
-                                    split='train'),
-            'val': SpheresDataset(debug=args.debug,
-                                    data_dir=args.data_dir,
-                                    split='val')
-        }
-    elif args.dataset_type == 'phi_field_hit':
-        return {
-            'train': PhiDataset(data_dir=args.data_dir,
-                                split='train',
-                                debug=args.debug,
-                                interface_rep=interface_representation,
-                                epsilon=args.epsilon),
-            'val': PhiDataset(data_dir=args.data_dir,
-                                split='val',
-                                debug=args.debug,
-                                interface_rep=interface_representation,
-                                epsilon=args.epsilon),
-        }
-    elif args.dataset_type == 'phi_field_hit_patched':
-        return {
-            'train': PatchPhiDataset(data_dir=args.data_dir,
-                                    split='train',
-                                    patch_size=args.vol_size,
-                                    debug=args.debug,
-                                    interface_rep=interface_representation,
-                                    epsilon=args.epsilon),
-            'val': PatchPhiDataset(data_dir=args.data_dir,
-                                    split='val',
-                                    patch_size=args.vol_size,
-                                    debug=args.debug,
-                                    interface_rep=interface_representation,
-                                    epsilon=args.epsilon),
+            'train': PatchVolumeDatasetInMemory(debug=args.debug,
+                                                data_dir=args.data_dir,
+                                                split='train',
+                                                patch_size=args.vol_size),
+            'val': PatchVolumeDatasetInMemory(debug=args.debug,
+                                              data_dir=args.data_dir,
+                                              split='val',
+                                              patch_size=args.vol_size),
         }
     else:
         raise ValueError(f'Dataset type {args.dataset_type} not supported')
@@ -213,8 +179,6 @@ def parse_args():
     parser.add_argument('--data-dir', type=str, default='/Users/murray/Projects/multphase_flow_encoder/multiphase_flow_encoder/src/preprocessing/data/ellipsoids/tanh', help='Path to data directory')
     parser.add_argument('--num-dl-workers', type=int, default=0, help='Number of dataloader workers')
     parser.add_argument('--debug', action='store_true', help='Debug mode - run with just a few data samples')
-    parser.add_argument('--interface-representation', type=str, default='tanh', help='Interface representation to use')
-    parser.add_argument('--epsilon', type=float, default=1/256, help='Epsilon value for interface representation')
     parser.add_argument('--vol-size', type=int, default=64, help='Size of volumes / patches to use')
 
     # Training args
