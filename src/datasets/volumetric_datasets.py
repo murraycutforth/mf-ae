@@ -99,7 +99,7 @@ class PatchVolumeDatasetInMemory(VolumeDatasetInMemory):
 
         self.patch_size = patch_size
 
-        vol_size = self.data[0].shape[0]
+        vol_size = self.data[0].shape[-1]
         self.num_patches_per_volume = (vol_size // self.patch_size)**3 // 2  # Overlap of 50%
         self.patch_start_inds = []
         self.volume_ids = []
@@ -113,6 +113,7 @@ class PatchVolumeDatasetInMemory(VolumeDatasetInMemory):
             volume_id = i // self.num_patches_per_volume
             self.volume_ids.append(volume_id)
 
+        logger.info(f'Using {self.num_patches_per_volume} patches per volume')
         logger.info(f'Generated {len(self.patch_start_inds)} patches of size {patch_size}^3 from {len(self.filenames)} volumes')
 
     def extract_patch(self, volume, patch_start_inds):
