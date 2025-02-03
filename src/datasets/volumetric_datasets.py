@@ -14,7 +14,7 @@ class VolumeDatasetInMemory(Dataset):
     Notes:
         - Creates a (reproducible) train/val split of the data.
         - Loads all data into memory.
-        - Data is stored as .npz files
+        - Data is loaded from .npz files
     """
     def __init__(self,
                  data_dir: str,
@@ -22,6 +22,7 @@ class VolumeDatasetInMemory(Dataset):
                  debug: bool = False,
                  data_key: str = 'phi',
                  metadata_keys: list = None,
+                 dtype: torch.dtype = torch.float32,
                  ):
         super().__init__()
 
@@ -65,7 +66,7 @@ class VolumeDatasetInMemory(Dataset):
             if self.metadata_keys:
                 self.metadata.append({k: data[k] for k in self.metadata_keys})
 
-        self.data = [torch.tensor(d, dtype=torch.float32).unsqueeze(0) for d in self.data]
+        self.data = [torch.tensor(d, dtype=dtype).unsqueeze(0) for d in self.data]
 
         logger.info(f'Generated {len(self.data)} samples of volumetric data')
         logger.info(f'Each sample has shape {self.data[0].shape}')
@@ -80,7 +81,7 @@ class VolumeDatasetInMemory(Dataset):
         return len(self.data)
 
     def __getitem__(self, idx):
-        return self.data[idx]
+        return self.data[idx].float()
 
 
 class PatchVolumeDatasetInMemory(VolumeDatasetInMemory):
@@ -94,8 +95,9 @@ class PatchVolumeDatasetInMemory(VolumeDatasetInMemory):
                  data_key: str = 'phi',
                  metadata_keys: list = None,
                  patch_size: int = 32,
+                 dtype: torch.dtype = torch.float32,
                  ):
-        super().__init__(data_dir, split, debug, data_key, metadata_keys)
+        super().__init__(data_dir, split, debug, data_key, metadata_keys, dtype)
 
         self.patch_size = patch_size
 

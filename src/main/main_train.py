@@ -132,11 +132,13 @@ def construct_datasets(args) -> dict:
             'train': PatchVolumeDatasetInMemory(debug=args.debug,
                                                 data_dir=args.data_dir,
                                                 split='train',
-                                                patch_size=args.vol_size),
+                                                patch_size=args.vol_size,
+                                                dtype=torch.float16),
             'val': PatchVolumeDatasetInMemory(debug=args.debug,
                                               data_dir=args.data_dir,
                                               split='val',
-                                              patch_size=args.vol_size),
+                                              patch_size=args.vol_size,
+                                              dtype=torch.float16),
         }
     else:
         raise ValueError(f'Dataset type {args.dataset_type} not supported')
