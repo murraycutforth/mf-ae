@@ -96,7 +96,7 @@ class PatchVolumeDatasetInMemory(VolumeDatasetInMemory):
                  metadata_keys: list = None,
                  patch_size: int = 32,
                  dtype: torch.dtype = torch.float32,
-                 sdf: bool = None,
+                 sdf: bool = None,  # TODO: how to get this info in at construction?
                  ):
         super().__init__(data_dir, split, debug, data_key, metadata_keys, dtype)
 

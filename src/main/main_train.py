@@ -82,7 +82,6 @@ def main():
         train_batch_size=args.batch_size,
         train_lr=args.lr,
         train_num_epochs=args.num_epochs,
-        save_and_sample_every=args.save_and_sample_every,
         results_folder=outdir,
         l2_reg=args.weight_decay,
         cpu_only=not torch.cuda.is_available(),
@@ -91,6 +90,7 @@ def main():
         restart_dir=args.restart_dir,
         restart_from_milestone=args.restart_from_milestone,
         metric_types=metrics,
+        low_data_mode=True,
     )
 
     trainer.train()
@@ -177,8 +177,8 @@ def parse_args():
     parser.add_argument('--run-name', type=str, default='debug', help='Name of the run')
 
     # Dataset args
-    parser.add_argument('--dataset-type', type=str, default='ellipse', help='Type of dataset to use')
-    parser.add_argument('--data-dir', type=str, default='/Users/murray/Projects/multphase_flow_encoder/multiphase_flow_encoder/src/preprocessing/data/ellipsoids/tanh', help='Path to data directory')
+    parser.add_argument('--dataset-type', type=str, default='volumetric', help='Type of dataset to use')
+    parser.add_argument('--data-dir', type=str, default='/Volumes/My Passport for Mac/Multiphase-ae/preprocessed_datasets/v8_spheres/HEAVISIDE', help='Path to data directory')
     parser.add_argument('--num-dl-workers', type=int, default=0, help='Number of dataloader workers')
     parser.add_argument('--debug', action='store_true', help='Debug mode - run with just a few data samples')
     parser.add_argument('--vol-size', type=int, default=64, help='Size of volumes / patches to use')
@@ -204,9 +204,6 @@ def parse_args():
     args = parser.parse_args()
 
     args.dim_mults = tuple(args.dim_mults)
-
-    if args.save_and_sample_every is None:
-        args.save_and_sample_every = max(1, args.num_epochs // 10)
 
     return args
 
