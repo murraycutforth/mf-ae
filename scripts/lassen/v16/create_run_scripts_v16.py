@@ -22,7 +22,7 @@ def main():
         'dataset-type': 'volumetric_patched',
         'vol-size': 64,
         'num-dl-workers': 0,
-        'batch-size': 1,
+        'batch-size': 2,
         'num-epochs': 10,
         'save-and-sample-every': 10,
         'lr': 1e-4,

@@ -96,13 +96,14 @@ class PatchVolumeDatasetInMemory(VolumeDatasetInMemory):
                  metadata_keys: list = None,
                  patch_size: int = 32,
                  dtype: torch.dtype = torch.float32,
+                 sdf: bool = None,
                  ):
         super().__init__(data_dir, split, debug, data_key, metadata_keys, dtype)
 
         self.patch_size = patch_size
 
         vol_size = self.data[0].shape[-1]
-        self.num_patches_per_volume = (vol_size // self.patch_size)**3 // 2  # Overlap of 50%
+        self.num_patches_per_volume = (vol_size // self.patch_size)**3
         self.patch_start_inds = []
         self.volume_ids = []
 
@@ -110,10 +111,20 @@ class PatchVolumeDatasetInMemory(VolumeDatasetInMemory):
 
         for i in range(len(self.filenames) * self.num_patches_per_volume):
             patch_start_inds = np.random.randint(0, vol_size - self.patch_size, 3)
-            self.patch_start_inds.append(patch_start_inds)
 
-            volume_id = i // self.num_patches_per_volume
-            self.volume_ids.append(volume_id)
+            if sdf is not None:
+                # Extract this patch, and only keep the patch inds if there is some interior region in the patch
+                patch = self.extract_patch(self.data[i // self.num_patches_per_volume], patch_start_inds).squeeze().numpy()
+                if sdf:
+                    interior_region = patch < 0
+                else:
+                    interior_region = patch > 0.5
+
+                if not interior_region.any():
+                    continue
+
+            self.patch_start_inds.append(patch_start_inds)
+            self.volume_ids.append(i // self.num_patches_per_volume)
 
         logger.info(f'Using {self.num_patches_per_volume} patches per volume')
         logger.info(f'Generated {len(self.patch_start_inds)} patches of size {patch_size}^3 from {len(self.filenames)} volumes')
