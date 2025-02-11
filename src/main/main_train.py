@@ -70,7 +70,7 @@ def main():
 
     logger.info(f'Starting training with args: {args}')
 
-    model = construct_model(args)
+    model = construct_model(args, outdir=outdir)
     datasets = construct_datasets(args)
     loss = construct_loss(args)
     metrics = construct_metrics(args)
