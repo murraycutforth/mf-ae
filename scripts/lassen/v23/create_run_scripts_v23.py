@@ -21,7 +21,7 @@ def main():
 
     const_args = {
         'dim': 32,
-        'dataset-type': 'volumetric_patched',
+        'dataset-type': 'volumetric',
         'num-dl-workers': 0,
         'batch-size': 1,
         'num-epochs': 10,
