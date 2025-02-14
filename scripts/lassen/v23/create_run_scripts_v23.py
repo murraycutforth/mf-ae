@@ -30,6 +30,7 @@ def main():
         'dim-mults': '1 2 4 8 8 8',
         'block-type': 1,
         'z-channels': 4,
+        'max-samples': 25_000,
     }
 
     # Generate the Cartesian product of the values in search_args

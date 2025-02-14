@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 from src.interface_representation.interface_transformations import convert_from_exact_sdf
 from src.interface_representation.interface_types import InterfaceType
 
-NUM_SAMPLES_PER_DATASET = 2500  # TODO: Change to 2500
+NUM_SAMPLES_PER_DATASET = 2500
 VOL_SIZE = 64
 OUTDIR_BASE = Path('data/mu_spheres')
 

@@ -23,6 +23,7 @@ class VolumeDatasetInMemory(Dataset):
                  data_key: str = 'phi',
                  metadata_keys: list = None,
                  dtype: torch.dtype = torch.float32,
+                 max_num_samples: int = None,
                  ):
         super().__init__()
 
@@ -38,7 +39,13 @@ class VolumeDatasetInMemory(Dataset):
 
         # Split the filenames into train, val, test
         np.random.seed(42)
-        run_inds = np.arange(len(self.filenames))
+
+        num_samples = len(self.filenames)
+        if max_num_samples is not None:
+            num_samples = min(num_samples, max_num_samples)
+            logger.info(f'Limiting number of samples to {num_samples}')
+
+        run_inds = np.arange(num_samples)
         np.random.shuffle(run_inds)
 
         train_size = int(0.8 * len(run_inds))
