@@ -35,21 +35,16 @@ class VolumeDatasetInMemory(Dataset):
 
         # Find all .npz filenames in this dir
         self.filenames = list(self.data_dir.glob("*.npz"))
+        self.filenames.sort()
         assert len(self.filenames) > 0, f'No .npz files found in {self.data_dir}'
 
-        # Split the filenames into train, val, test
-        np.random.seed(42)
-
-        num_samples = len(self.filenames)
+        # Limit the max number of samples considered
         if max_num_samples is not None:
-            num_samples = min(num_samples, max_num_samples)
-            logger.info(f'Limiting number of samples to {num_samples}')
+            self.filenames = self.filenames[:max_num_samples]
 
-        run_inds = np.arange(num_samples)
-        np.random.shuffle(run_inds)
-
-        train_size = int(0.8 * len(run_inds))
-        val_size = int(0.2 * len(run_inds))
+        # Split the filenames into train, val, test
+        train_size = int(0.8 * len(self.filenames))
+        val_size = int(0.2 * len(self.filenames))
 
         logger.info(f'Constructed splits of size (number of runs NOT snapshots): train={train_size}, val={val_size}')
 
