@@ -4,6 +4,7 @@ import logging
 import sys
 
 import torch.cuda
+from conv_ae_3d.models.conv_with_fc_model import ConvAutoencoderWithFC
 from torch import nn
 from conv_ae_3d.models.baseline_model import ConvAutoencoderBaseline
 from conv_ae_3d.trainer_ae import MyAETrainer
@@ -34,7 +35,7 @@ def main():
     save_args_to_file(args, outdir / 'args.json')
 
     datasets = construct_datasets(args)
-    model = construct_model(args)
+    model = construct_model(args, outdir)
     loss = construct_loss(args)
 
     trainer = MyAETrainer(
@@ -100,13 +101,26 @@ def construct_model(args, outdir=None):
 
     torch.manual_seed(args.seed)
 
-    model = ConvAutoencoderBaseline(
-        dim=args.dim,
-        dim_mults=args.dim_mults,
-        channels=1,
-        z_channels=args.z_channels,
-        block_type=args.block_type,
-    )
+    if args.model_type == 'baseline':
+        model = ConvAutoencoderBaseline(
+            dim=args.dim,
+            dim_mults=args.dim_mults,
+            channels=1,
+            z_channels=args.z_channels,
+            block_type=args.block_type,
+        )
+    elif args.model_type == 'conv_with_fc':
+        model = ConvAutoencoderWithFC(
+            dim=args.dim,
+            dim_mults=args.dim_mults,
+            channels=1,
+            z_channels=args.z_channels,
+            block_type=args.block_type,
+            fc_layers=args.fc_layers,
+            image_shape=(64, 64, 64)
+        )
+    else:
+        raise ValueError(f'Model type {args.model_type} not supported')
 
     if outdir is not None:
         with open(outdir / 'construct_model_args.json', 'w') as f:
@@ -180,7 +194,7 @@ def parse_args():
 
     # Dataset args
     parser.add_argument('--dataset-type', type=str, default='volumetric', help='Type of dataset to use')
-    parser.add_argument('--data-dir', type=str, default='/Volumes/My Passport for Mac/Multiphase-ae/preprocessed_datasets/v8_spheres/HEAVISIDE', help='Path to data directory')
+    parser.add_argument('--data-dir', type=str, default='/Users/murray/Projects/multphase_flow_encoder/multiphase_flow_encoder/src/preprocessing/data/mu_spheres/spheres_mu_1.00/HEAVISIDE', help='Path to data directory')
     parser.add_argument('--num-dl-workers', type=int, default=0, help='Number of dataloader workers')
     parser.add_argument('--debug', action='store_true', help='Debug mode - run with just a few data samples')
     parser.add_argument('--vol-size', type=int, default=64, help='Size of volumes / patches to use')
@@ -199,8 +213,10 @@ def parse_args():
     parser.add_argument('--metrics', type=str, nargs='+', default=['mse', 'mae', 'linf'], help='Metrics to compute during training')
 
     # Model args
+    parser.add_argument('--model-type', type=str, default='baseline', help='Type of model to use (baseline, conv_with_fc)')
     parser.add_argument('--dim', type=int, default=8, help='Base dimension for the model')
     parser.add_argument('--dim-mults', type=int, nargs='+', default=[1, 2,], help='Dimension multipliers for the model')
+    parser.add_argument('--fc-layers', type=int, nargs='+', default=None, help='Fully connected layers to use in the model')
     parser.add_argument('--z-channels', type=int, default=1, help='Number of channels in the latent space')
     parser.add_argument('--block-type', type=int, default=1, help='Type of block to use in the model')
 

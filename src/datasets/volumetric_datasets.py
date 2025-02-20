@@ -38,6 +38,9 @@ class VolumeDatasetInMemory(Dataset):
         self.filenames.sort()
         assert len(self.filenames) > 0, f'No .npz files found in {self.data_dir}'
 
+        logger.info(f'Found {len(self.filenames)} .npz files in {self.data_dir}')
+        logger.info(f'First file: {self.filenames[0]}')
+
         # Limit the max number of samples considered
         if max_num_samples is not None:
             self.filenames = self.filenames[:max_num_samples]

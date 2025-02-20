@@ -87,6 +87,7 @@ def main():
         sdf_exact = exact_sdf_from_diffuse(phi, epsilon=1 / 256)
 
         # Create list of patch indices for this volume
+        # Each interface type will have the same patches
         patch_start_inds = np.random.randint(0, 256 - VOL_SIZE, (num_patches_per_vol, 3))
 
         for interface_type, epsilon, outdir in interface_type_generator(interface_types, epsilons):
