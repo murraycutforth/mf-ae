@@ -7,16 +7,15 @@ VERSION = 26  # Compare compression ratios on HIT dataset
 def main():
     search_args = {
         'data-dir': ['/usr/workspace/cutforth1/data-mf-ae/patched_hit_experiment/SIGNED_DISTANCE_EXACT',
-                     '/usr/workspace/cutforth1/data-mf-ae/patched_hit_experiment/SIGNED_DISTANCE_APPROXIMATE',
                      '/usr/workspace/cutforth1/data-mf-ae/patched_hit_experiment/HEAVISIDE',
                      '/usr/workspace/cutforth1/data-mf-ae/patched_hit_experiment/TANH_EPSILON0.0078125',
-                        '/usr/workspace/cutforth1/data-mf-ae/patched_hit_experiment/TANH_EPSILON0.015625',
-                        '/usr/workspace/cutforth1/data-mf-ae/patched_hit_experiment/TANH_EPSILON0.03125',
-                        '/usr/workspace/cutforth1/data-mf-ae/patched_hit_experiment/TANH_EPSILON0.0625',
+                     '/usr/workspace/cutforth1/data-mf-ae/patched_hit_experiment/TANH_EPSILON0.015625',
+                     '/usr/workspace/cutforth1/data-mf-ae/patched_hit_experiment/TANH_EPSILON0.03125',
+                     '/usr/workspace/cutforth1/data-mf-ae/patched_hit_experiment/TANH_EPSILON0.0625',
                      '/usr/workspace/cutforth1/data-mf-ae/patched_hit_experiment/TANH_EPSILON0.125',
                      '/usr/workspace/cutforth1/data-mf-ae/patched_hit_experiment/TANH_EPSILON0.25',
                      ],
-        'seed': [4],
+        'seed': [4, 7, 42],
         'fc-layers': ['256 196 128', '256 128 64', '256 128 32'],
     }
 
@@ -26,7 +25,7 @@ def main():
         'dataset-type': 'volumetric',
         'num-dl-workers': 0,
         'batch-size': 1,
-        'num-epochs': 15,
+        'num-epochs': 5,
         'lr': 1e-4,
         'loss': 'l1',
         'dim-mults': '1 2 4 8 8 8',
@@ -88,7 +87,7 @@ def create_run_script(i, run_name, args_dict):
 
         f.write(f"conda run -n genmodel_env accelerate launch ./src/main/main_train.py {param_str}\n")
 
-    run_time = 720
+    run_time = 240
 
     # Create corresponding .bsub
     with open(f"run_training_v{VERSION}_{i}.bsub", "w") as f:
