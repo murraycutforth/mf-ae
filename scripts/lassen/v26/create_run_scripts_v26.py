@@ -15,8 +15,8 @@ def main():
                      '/usr/workspace/cutforth1/data-mf-ae/patched_hit_experiment/TANH_EPSILON0.125',
                      '/usr/workspace/cutforth1/data-mf-ae/patched_hit_experiment/TANH_EPSILON0.25',
                      ],
-        'seed': [4, 7, 42],
-        'fc-layers': ['256 196 128', '256 128 64', '256 128 32'],
+        'seed': [4],
+        'fc-layers': ['4096 512 128', '4096 512 64', '4096 512 32'],
     }
 
     const_args = {
@@ -28,7 +28,7 @@ def main():
         'num-epochs': 5,
         'lr': 1e-4,
         'loss': 'l1',
-        'dim-mults': '1 2 4 8 8 8',
+        'dim-mults': '1 2 4 8 8 4',
         'block-type': 1,
         'z-channels': 4,
         'max-samples': 25_000,
