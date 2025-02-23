@@ -88,7 +88,7 @@ def create_run_script(i, run_name, args_dict):
 
         f.write(f"conda run -n genmodel_env accelerate launch ./src/main/main_train.py {param_str}\n")
 
-    run_time = 240
+    run_time = 720
 
     # Create corresponding .bsub
     with open(f"run_training_v{VERSION}_{i}.bsub", "w") as f:
