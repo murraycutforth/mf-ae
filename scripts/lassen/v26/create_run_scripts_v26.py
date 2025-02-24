@@ -16,7 +16,7 @@ def main():
                      '/usr/workspace/cutforth1/data-mf-ae/patched_hit_experiment/TANH_EPSILON0.25',
                      ],
         'seed': [4],
-        'fc-layers': ['4096 512 128', '4096 512 64', '4096 512 32'],
+        'fc-layers': ['256 128 128', '256 128 64', '256 128 32'],
     }
 
     const_args = {
