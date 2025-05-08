@@ -9,3 +9,5 @@ test/*.csv
 src/.archive
 *.out
 *.png
+*.csv
+ood_results
