@@ -132,8 +132,8 @@ def hausdorff_distance(gt_patch, pred_patch, level: float = 0.5):
     gt_patch = gt_patch > level
     pred_patch = pred_patch > level
 
-    gt_indices = np.argwhere(gt_patch) * 1 / 64
-    pred_indices = np.argwhere(pred_patch) * 1 / 64
+    gt_indices = np.argwhere(gt_patch)
+    pred_indices = np.argwhere(pred_patch)
 
     if len(gt_indices) == 0 or len(pred_indices) == 0:
         return np.nan

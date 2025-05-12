@@ -11,3 +11,4 @@ src/.archive
 *.png
 *.csv
 ood_results
+*.npz
