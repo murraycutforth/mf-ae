@@ -12,3 +12,4 @@ src/.archive
 *.csv
 ood_results
 *.npz
+*.zip
