@@ -136,11 +136,13 @@ def construct_datasets(args) -> dict:
                                            data_dir=args.data_dir,
                                            split='train',
                                            max_num_samples=args.max_samples,
+                                           max_train_samples=args.max_train_samples,
                                            ),
             'val': VolumeDatasetInMemory(debug=args.debug,
                                          data_dir=args.data_dir,
                                          split='val',
-                                            max_num_samples=args.max_samples,
+                                         max_num_samples=args.max_samples,
+                                         max_train_samples=args.max_train_samples,
                                          )
         }
     elif args.dataset_type == 'volumetric_patched':
@@ -199,6 +201,7 @@ def parse_args():
     parser.add_argument('--debug', action='store_true', help='Debug mode - run with just a few data samples')
     parser.add_argument('--vol-size', type=int, default=64, help='Size of volumes / patches to use')
     parser.add_argument('--max-samples', type=int, default=None, help='Maximum number of samples to use')
+    parser.add_argument('--max-train-samples', type=int, default=None, help='Maximum number of samples to use in training set (val/test left unchanged)')
 
     # Training args
     parser.add_argument('--seed', type=int, default=42, help='Random seed for reproducibility')

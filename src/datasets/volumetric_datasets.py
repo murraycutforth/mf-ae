@@ -24,6 +24,7 @@ class VolumeDatasetInMemory(Dataset):
                  metadata_keys: list = None,
                  dtype: torch.dtype = torch.float32,
                  max_num_samples: int = None,
+                 max_train_samples: int = None,
                  ):
         super().__init__()
 
@@ -49,10 +50,19 @@ class VolumeDatasetInMemory(Dataset):
         train_size = int(0.8 * len(self.filenames))
         val_size = int(0.2 * len(self.filenames))
 
-        logger.info(f'Constructed splits of size (number of runs NOT snapshots): train={train_size}, val={val_size}')
+        logger.info(f'Constructed splits of size: train={train_size}, val={val_size}')
 
         if split == 'train':
             self.filenames = self.filenames[:train_size]
+
+            # Limit the max number of training samples which keeping val/test unchanged (used for training set size study)
+            # Choose random subset of training set
+            if max_train_samples is not None:
+                logger.info(f"Limiting train samples from {train_size} to <={max_train_samples}")
+                train_size = min(max_train_samples, train_size)
+                assert train_size <= max_train_samples
+                self.filenames = np.random.choice(self.filenames, train_size, replace=False)
+
         elif split == 'val':
             self.filenames = self.filenames[train_size:train_size+val_size]
         elif split == 'test':
