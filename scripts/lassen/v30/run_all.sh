@@ -47,4 +47,12 @@ bsub run_training_v30_44.bsub
 bsub run_training_v30_45.bsub
 bsub run_training_v30_46.bsub
 bsub run_training_v30_47.bsub
+bsub run_training_v30_48.bsub
+bsub run_training_v30_49.bsub
+bsub run_training_v30_50.bsub
+bsub run_training_v30_51.bsub
+bsub run_training_v30_52.bsub
+bsub run_training_v30_53.bsub
+bsub run_training_v30_54.bsub
+bsub run_training_v30_55.bsub
 echo "All jobs submitted"

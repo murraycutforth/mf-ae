@@ -16,7 +16,7 @@ def main():
                      '/usr/workspace/cutforth1/data-mf-ae/patched_hit_experiment/TANH_EPSILON0.25',
                      ],
         'seed': [4],
-        'max-train-samples': [500, 1000, 2000, 4000, 8000, 16000],
+        'max-train-samples': [500, 1000, 2000, 4000, 8000, 16000, 20000],
     }
 
     const_args = {
@@ -25,7 +25,7 @@ def main():
         'dataset-type': 'volumetric',
         'num-dl-workers': 0,
         'batch-size': 1,
-        'num-epochs': 15,
+        'num-epochs': 20,
         'lr': 1e-4,
         'loss': 'l1',
         'dim-mults': '1 2 4 8 8 8',
