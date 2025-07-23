@@ -1,0 +1,5 @@
+#BSUB -W 720
+#BSUB -G stanford
+#BSUB -q pbatch
+jsrun -n 1 -r 1 -a 1 -c 40 -g 4 ./run_training_v30_104.sh
+echo "Job complete at $(date)"
