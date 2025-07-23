@@ -1,7 +1,7 @@
 import itertools
 import os
 
-VERSION = 30  # Compare effect of training set size
+VERSION = 31  # Compare effect of training set size
 
 
 def main():
