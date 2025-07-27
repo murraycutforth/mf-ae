@@ -1,4 +1,5 @@
 source /usr/workspace/cutforth1/anaconda/bin/activate
+
 export LD_LIBRARY_PATH=/opt/ibm/spectrumcomputing/lsf/10.1.0.10/linux3.10-glibc2.17-ppc64le-csm/lib
 export PYTHONPATH=/usr/WS1/cutforth1/mf-ae
 cd /usr/WS1/cutforth1/mf-ae

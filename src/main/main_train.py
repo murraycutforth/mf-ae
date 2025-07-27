@@ -108,6 +108,7 @@ def construct_model(args, outdir=None):
             channels=1,
             z_channels=args.z_channels,
             block_type=args.block_type,
+            act_type=args.act_type,
         )
     elif args.model_type == 'conv_with_fc':
         model = ConvAutoencoderWithFC(
@@ -222,6 +223,7 @@ def parse_args():
     parser.add_argument('--fc-layers', type=int, nargs='+', default=None, help='Fully connected layers to use in the model')
     parser.add_argument('--z-channels', type=int, default=1, help='Number of channels in the latent space')
     parser.add_argument('--block-type', type=int, default=1, help='Type of block to use in the model')
+    parser.add_argument('--act-type', type=str, default='silu', help='Type of activation to use')
 
     args = parser.parse_args()
 
