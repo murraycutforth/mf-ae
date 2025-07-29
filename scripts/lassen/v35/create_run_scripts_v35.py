@@ -69,7 +69,7 @@ def main():
 
 def create_param_str(i, combination):
     param_str = "_".join([f"{key}{str(value)}" for key, value in combination.items()])
-    param_str = param_str.replace("/usr/workspace/cutforth1/data-mf-ae/patched_hit_experiment/", "")
+    param_str = param_str.replace("/usr/workspace/cutforth1/data-mf-ae/", "")
     param_str = param_str.replace("(", "")
     param_str = param_str.replace(")", "")
     param_str = param_str.replace(" ", "")
