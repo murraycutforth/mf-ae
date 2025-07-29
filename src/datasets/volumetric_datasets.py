@@ -28,6 +28,8 @@ class VolumeDatasetInMemory(Dataset):
                  ):
         super().__init__()
 
+        assert split in ['train', 'val', 'hyperparam_val']
+
         self.data_dir = Path(data_dir)
         self.data_key = data_key
         self.metadata_keys = metadata_keys
@@ -48,7 +50,8 @@ class VolumeDatasetInMemory(Dataset):
 
         # Split the filenames into train, val, test
         train_size = int(0.8 * len(self.filenames))
-        val_size = int(0.2 * len(self.filenames))
+        val_size = int(0.15 * len(self.filenames))
+        hyperparam_val_size = int(0.05 * len(self.filenames))
 
         logger.info(f'Constructed splits of size: train={train_size}, val={val_size}')
 
@@ -65,6 +68,8 @@ class VolumeDatasetInMemory(Dataset):
 
         elif split == 'val':
             self.filenames = self.filenames[train_size:train_size+val_size]
+        elif split == 'hyperparam_val':
+            self.filenames = self.filenames[train_size+val_size:train_size+val_size+hyperparam_val_size]
         elif split == 'test':
             raise NotImplementedError
 

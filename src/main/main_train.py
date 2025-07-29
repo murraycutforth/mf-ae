@@ -1,6 +1,7 @@
 import argparse
 import json
 import logging
+import os
 import sys
 
 import torch.cuda
@@ -163,11 +164,66 @@ def construct_datasets(args) -> dict:
         raise ValueError(f'Dataset type {args.dataset_type} not supported')
 
 
+def _parse_path_info(path_string: str):
+    """
+    Parses a file path to extract the interface type and an optional epsilon value.
+
+    The function expects the last component of the path to be in one of two formats:
+    1. "INTERFACE_TYPE" (e.g., "HEAVISIDE")
+    2. "INTERFACE_TYPE_EPSILON<value>" (e.g., "TANH_EPSILON0.125")
+
+    Args:
+        path_string: The full path string to parse.
+
+    Returns:
+        A tuple containing:
+        - The interface type (str).
+        - The epsilon value (float) or None if not present.
+    """
+    # Get the last part of the path (e.g., "TANH_EPSILON0.125")
+    basename = os.path.basename(path_string)
+
+    # Define the separator we are looking for
+    separator = '_EPSILON'
+
+    if separator in basename:
+        # If the separator exists, split the string into two parts
+        parts = basename.split(separator)
+        interface_type = parts[0]
+        epsilon_value = float(parts[1])
+        return (interface_type, epsilon_value)
+    else:
+        # If no separator, the whole name is the type and epsilon is None
+        interface_type = basename
+        epsilon_value = None
+        return (interface_type, epsilon_value)
+
+
 def construct_loss(args):
     if args.loss == 'mse':
         return nn.MSELoss()
     elif args.loss == 'l1':
         return nn.L1Loss()
+    elif args.loss == 'auto':
+        # We use the results of our hyper-param study here to choose between MSE and L1 losses
+        data_dir = args.data_dir
+        interface_type, epsilon_value = _parse_path_info(data_dir)
+
+        if interface_type == 'HEAVISIDE':
+            return nn.MSELoss()
+        elif interface_type == 'SIGNED_DISTANCE_EXACT':
+            return nn.L1Loss()
+        elif interface_type == 'TANH':
+            assert epsilon_value is not None
+            if epsilon_value > 0.03125 + 1e-9: # Greater than 1/32
+                logger.info(f'For data_dir: {data_dir}, choosing L1 loss')
+                return nn.L1Loss()
+            else:
+                logger.info(f'For data_dir: {data_dir}, choosing MSE loss')
+                return nn.MSELoss()  # Use MSE for sharper interfaces (1/32 and less)
+        else:
+            raise ValueError(f'Loss type {args.loss} not supported')
+
     else:
         raise ValueError(f'Loss function {args.loss} not supported')
 

@@ -13,3 +13,5 @@ src/.archive
 ood_results
 *.npz
 *.zip
+*.pdf
+*.tex

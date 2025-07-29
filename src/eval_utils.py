@@ -69,10 +69,10 @@ def load_model(model_path, dim_mults=(1, 2, 4, 8, 8, 8), z_channels=4, block_typ
     return model
 
 
-def load_dataset(dataset_path, max_num_samples=None):
+def load_dataset(dataset_path, split='val', max_num_samples=None):
     return VolumeDatasetInMemory(
         data_dir=dataset_path,
-        split='val',
+        split=split,
         max_num_samples=max_num_samples
     )
 
