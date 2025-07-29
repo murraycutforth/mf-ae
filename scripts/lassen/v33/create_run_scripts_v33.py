@@ -129,6 +129,7 @@ def create_run_all_script(num_runs: int):
         f.write('#!/bin/bash\n')
         for i in range(num_runs):
             f.write(f'bsub run_training_v{VERSION}_{i}.bsub\n')
+            f.write('sleep 0.5\n')
         f.write('echo "All jobs submitted"')
 
     os.chmod("run_all.sh", 0o755)

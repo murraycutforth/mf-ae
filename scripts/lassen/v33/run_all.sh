@@ -1,17 +1,32 @@
 #!/bin/bash
 bsub run_training_v33_0.bsub
+sleep 0.5
 bsub run_training_v33_1.bsub
+sleep 0.5
 bsub run_training_v33_2.bsub
+sleep 0.5
 bsub run_training_v33_3.bsub
+sleep 0.5
 bsub run_training_v33_4.bsub
+sleep 0.5
 bsub run_training_v33_5.bsub
+sleep 0.5
 bsub run_training_v33_6.bsub
+sleep 0.5
 bsub run_training_v33_7.bsub
+sleep 0.5
 bsub run_training_v33_8.bsub
+sleep 0.5
 bsub run_training_v33_9.bsub
+sleep 0.5
 bsub run_training_v33_10.bsub
+sleep 0.5
 bsub run_training_v33_11.bsub
+sleep 0.5
 bsub run_training_v33_12.bsub
+sleep 0.5
 bsub run_training_v33_13.bsub
+sleep 0.5
 bsub run_training_v33_14.bsub
+sleep 0.5
 echo "All jobs submitted"
