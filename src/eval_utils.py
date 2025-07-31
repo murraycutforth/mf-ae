@@ -117,7 +117,7 @@ def dice_coefficient(gt_patch, pred_patch, level: float = 0.5):
     return 2 * intersection / union
 
 
-def hausdorff_distance(gt_patch, pred_patch, level: float = 0.5):
+def hausdorff_distance(gt_patch, pred_patch, level: float = 0.5, max_num_points=10_000):
     """Returns the Hausdorff distance of the foreground region, obtained by thresholding the images at level
 
     Note:
@@ -137,6 +137,14 @@ def hausdorff_distance(gt_patch, pred_patch, level: float = 0.5):
 
     if len(gt_indices) == 0 or len(pred_indices) == 0:
         return np.nan
+
+    if len(gt_indices) > max_num_points:
+        gt_indices_subset = np.random.choice(len(gt_indices), max_num_points, replace=False)
+        gt_indices = gt_indices[gt_indices_subset, ...]
+
+    if len(pred_indices) > max_num_points:
+        pred_indices_subset = np.random.choice(len(pred_indices), max_num_points, replace=False)
+        pred_indices = pred_indices[pred_indices_subset, ...]
 
     h_1 = directed_hausdorff(gt_indices, pred_indices)[0]
     h_2 = directed_hausdorff(pred_indices, gt_indices)[0]
