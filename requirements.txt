@@ -1,4 +1,4 @@
-numpy
+numpy<2
 matplotlib
 pandas
 scikit-learn
@@ -10,10 +10,8 @@ jupyter
 trame
 tqdm
 torch
-denoising-diffusion-pytorch
 accelerate
-ema-pytorch
 einops
 mesh2sdf
 trimesh
--e file:///Users/murray/Projects/ConvAE3D
+-e ./../conv-ae-3d

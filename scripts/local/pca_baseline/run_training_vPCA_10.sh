@@ -1,0 +1,2 @@
+export PYTHONPATH=/Users/murraycutforth/Projects/mf-ae
+python /Users/murraycutforth/Projects/mf-ae/src/main/main_train.py  --lr 1e-05 --model-type pca --dataset-type volumetric --num-dl-workers 0 --batch-size 32 --num-epochs 10 --loss mse --data-dir /Volumes/My\ Passport\ for\ Mac/Multiphase-ae/preprocessed_datasets/spheres_mu_2.00/TANH_EPSILON0.0078125 --seed 4 --run-name interfacial_ae_vPCA_run_10_datadir_Volumes_My\Passport\for\Mac_Multiphaseae_preprocessed_datasets_spheres_mu_200_TANH_EPSILON00078125_seed4

@@ -15,7 +15,7 @@ from src.interface_representation.interface_types import InterfaceType
 
 NUM_SAMPLES_PER_DATASET = 12_500
 VOL_SIZE = 64
-OUTDIR_BASE = Path('data/mu_spheres')
+OUTDIR_BASE = Path('/Volumes/My Passport for Mac/Multiphase-ae/preprocessed_datasets')
 
 
 def sphere_sdf(center: np.ndarray, radius: float, N: int):

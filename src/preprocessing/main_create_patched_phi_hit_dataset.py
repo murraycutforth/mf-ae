@@ -11,7 +11,7 @@ from src.interface_representation.interface_types import InterfaceType
 
 
 DATA_DIR = Path('/Volumes/My Passport for Mac/Multiphase-ae/tanh_256/')
-OUTDIR = Path('data/patched_hit_experiment')
+OUTDIR = Path('/Volumes/My Passport for Mac/Multiphase-ae/preprocessed_datasets/patched_hit_experiment')
 VOL_SIZE = 64
 
 

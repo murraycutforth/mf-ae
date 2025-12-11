@@ -10,6 +10,7 @@ from torch import nn
 from conv_ae_3d.models.baseline_model import ConvAutoencoderBaseline
 from conv_ae_3d.trainer_ae import MyAETrainer
 from conv_ae_3d.metrics import MetricType
+from conv_ae_3d.models.pca_model import LinearPCAAutoencoder
 
 from src.paths import project_dir
 from src.datasets.phi_field_dataset import PhiDataset, PatchPhiDataset
@@ -120,6 +121,18 @@ def construct_model(args, outdir=None):
             block_type=args.block_type,
             fc_layers=args.fc_layers,
             image_shape=(64, 64, 64)
+        )
+    elif args.model_type == 'pca':
+        # Build a linear autoencoder that learns a PCA subspace via SGD
+        # We assume single-channel volumes of size (C=1, D=vol_size, H=vol_size, W=vol_size)
+        # Should be used with L2 loss
+        vol_size = args.vol_size
+        image_shape = (1, vol_size, vol_size, vol_size)
+        model = LinearPCAAutoencoder(
+            image_shape=image_shape,
+            latent_dim=256,
+            learn_bias=True,
+            init_orthonormal=True,
         )
     else:
         raise ValueError(f'Model type {args.model_type} not supported')
